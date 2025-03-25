@@ -1,0 +1,34 @@
+# Sample Open edX organizations database
+#
+# These are details about organizations helping edX with Open edX, so that we
+# can automate some of our contribution processes.
+
+EduNEXT:
+    contractor: false
+    agreement: institution
+    contact:
+        name: Luis Felipe Montoya
+        email: contact@edunext.co
+MIT:
+    contractor: false
+    agreement: institution
+    contact:
+        name: Lita Nelsen
+        email: lita@mit.edu
+OpenCraft:
+    contractor: true
+    agreement: institution
+edX:
+    name: 2U/edX
+    agreement: institution
+    internal-ghorgs:
+        - edx
+        - openedx
+        - an-org
+        - org1
+tCRIL:
+    agreement: institution
+    internal-ghorgs:
+        - openedx
+        - an-org
+        - org1

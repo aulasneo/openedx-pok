@@ -1,0 +1,26 @@
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Archivos de configuración locales
+*.env
+*.local
+
+# Archivos de logs
+*.log
+
+# Archivos de caché
+*.cache/
+*.bak
+
+# Archivos de bases de datos locales
+*.sqlite3
+
+# Archivos de paquetes
+*.egg-info/
+dist/
+build/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

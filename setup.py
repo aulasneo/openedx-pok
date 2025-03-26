@@ -24,7 +24,7 @@ def get_requirements(path):
 
 
 version = ''
-with open('openedx-pok/__init__.py', 'r') as fd:
+with open('openedx_pok/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
@@ -51,3 +51,12 @@ setup(
     ),
     zip_safe=False,
 )
+
+entry_points={
+        "lms.djangoapp": [
+            "openedx_pok = openedx_pok.apps:OpenedxPokConfig",
+        ],
+        "cms.djangoapp": [
+            "openedx_pok = openedx_pok.apps:OpenedxPokConfig",
+        ],
+    },

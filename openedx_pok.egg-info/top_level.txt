@@ -1,2 +1,2 @@
-openedx_webhooks
+openedx_pok
 tests

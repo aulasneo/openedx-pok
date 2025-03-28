@@ -2,4 +2,4 @@
 Role based access control (RBAC) engine for Open edX
 """
 
-__version__ = "1.0.0"
+__version__ = "0.1.0"

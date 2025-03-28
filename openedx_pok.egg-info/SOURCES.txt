@@ -15,7 +15,9 @@ openedx_pok/views.py
 openedx_pok.egg-info/PKG-INFO
 openedx_pok.egg-info/SOURCES.txt
 openedx_pok.egg-info/dependency_links.txt
+openedx_pok.egg-info/entry_points.txt
 openedx_pok.egg-info/not-zip-safe
+openedx_pok.egg-info/requires.txt
 openedx_pok.egg-info/top_level.txt
 openedx_pok/migrations/__init__.py
 openedx_pok/settings/__init__.py

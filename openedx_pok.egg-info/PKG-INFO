@@ -1,19 +1,44 @@
 Metadata-Version: 2.2
 Name: openedx-pok
-Version: 1.0.0
+Version: 0.1.0
 Summary: Automated tasks for Open edX
 Home-page: https://github.com/aulasneo/openedx-pok
 Author: Open Source Community Managers at edX
 Author-email: oscm@edx.org
 License: Apache 2.0
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 4.2
+Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: Apache Software License
-Classifier: Framework :: Flask
-Classifier: Programming Language :: Python
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.12
 License-File: LICENSE
+Requires-Dist: Flask
+Requires-Dist: Flask-SSLify
+Requires-Dist: PyYAML
+Requires-Dist: URLObject
+Requires-Dist: arrow
+Requires-Dist: blinker
+Requires-Dist: cachetools
+Requires-Dist: celery
+Requires-Dist: click
+Requires-Dist: cryptography
+Requires-Dist: github3.py
+Requires-Dist: glom
+Requires-Dist: gunicorn
+Requires-Dist: jira
+Requires-Dist: logging_tree
+Requires-Dist: oauthlib[signedtoken]
+Requires-Dist: redis
+Requires-Dist: requests
+Requires-Dist: requests-oauthlib
+Requires-Dist: sentry-sdk[flask]
 Dynamic: author
 Dynamic: author-email
 Dynamic: classifier
 Dynamic: home-page
 Dynamic: license
+Dynamic: requires-dist
 Dynamic: summary

@@ -9,8 +9,8 @@ from rest_framework import status
 from django.utils.encoding import force_bytes
 
 # Claves compartidas (ajusta con los valores reales de PoK)
-WEBHOOK_SIGNING_KEY = b'shared_signing_key'
-WEBHOOK_BASIC_AUTH_SECRET = 'shared_basic_secret'
+WEBHOOK_SIGNING_KEY = b'd6bb7dc8-5731-439e-83ae-4d9c77d0d55e'
+WEBHOOK_BASIC_AUTH_SECRET = '14283a0d-c9c1-4969-a75c-e59214057819'
 
 TOLERANCE_MS = 5 * 60 * 1000  # 5 minutos
 

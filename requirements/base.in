@@ -2,6 +2,7 @@
 -c constraints.txt
 
 Django             # Web application framework
-
-
 openedx-atlas
+edx-django-utils
+django-model-utils
+edx-opaque-keys

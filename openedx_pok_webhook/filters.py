@@ -12,7 +12,9 @@ from openedx_filters.learning.filters import (
     DashboardRenderStarted
 )
 
-from .models import Certificate
+from django.template.loader import render_to_string
+
+from .models import CertificatePokApi
 from .client import PokApiClient
 from django.shortcuts import render
 
@@ -119,17 +121,17 @@ class CertificateRenderFilter(PipelineStep):
         pok_client = PokApiClient()
 
         try:
-            certificate = Certificate.objects.get(
+            certificate = CertificatePokApi.objects.get(
                 user_id=user_id,
                 course_id=course_id,
                 state="emitted"
             )
-        except Certificate.DoesNotExist:
-            certificate = Certificate.objects.get(
+        except CertificatePokApi.DoesNotExist:
+            certificate = CertificatePokApi.objects.get(
                 user_id=user_id,
                 course_id=course_id
             )
-            pok_response = pok_client.get_credential_details(certificate.certificate_id)
+            pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
             content = pok_response.get("content")
             certificate.state = content.get('state')
             certificate.save()
@@ -137,24 +139,35 @@ class CertificateRenderFilter(PipelineStep):
         if certificate.view_url:
             logger.info(f"Rendering POK certificate for user {user_id} in course {course_id}")
 
-            # Render the HTML template
-            html_response = render(
-                None,
-                "openedx_pok_webhook/certificate_pok.html",
-                {
-                    "document_title": context.get("document_title", "Certificate"),
-                    "logo_src": context.get("logo_src", ""),
-                    "accomplishment_copy_name": context.get("accomplishment_copy_name", "Student"),
-                    "student_name": certificate.user.get_full_name(),
-                    "course_name": course_id,
-                    "issue_date": certificate.emission_date,
-                    "certificate_image_url": certificate.view_url,
-                }
+
+            response = pok_client.get_credential_details(certificate.pok_certificate_id,
+                                                           decrypted=True)
+
+            if response.get("success"):
+                image_response = response.get("content")
+                image_content = image_response.get("location")
+            else:
+                image_content = certificate.view_url
+
+            template_context = {
+                'document_title': context.get('document_title', 'Certificate'),
+                'logo_src': context.get('logo_src', ''),
+                'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
+                'image_content': image_content,
+                'certificate_url': certificate.view_url,
+            }
+
+            html_content = render_to_string('openedx_pok_webhook/certificate_pok.html', template_context)
+
+            http_response = HttpResponse(
+                content=html_content,
+                content_type="text/html; charset=utf-8",
+                status=200
             )
 
             raise CertificateRenderStarted.RenderCustomResponse(
-                message="Rendering POK certificate",
-                response=html_response
+                message="Embedding POK certificate",
+                response=http_response
             )
         else:
             logger.warning(f"Found POK certificate record for {user_id} in {course_id} but URL is missing")

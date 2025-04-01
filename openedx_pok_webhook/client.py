@@ -95,8 +95,13 @@ class PokApiClient:
         """
         endpoint = urljoin(self.base_url, 'credential/')
         email = user.pii.email if hasattr(user, 'pii') else user.email
-        first_name, last_name = (split_name(user.pii.name) if hasattr(user, 'pii')
-                                 else user.first_name, user.last_name)
+
+        if hasattr(user, 'pii'):
+            first_name, last_name = split_name(user.pii.name)
+        else:
+             first_name = user.first_name
+             last_name = user.last_name
+
         payload = {
             "credential": {
                 "tags": [
@@ -120,19 +125,11 @@ class PokApiClient:
             },
             "customization": {
                 "template": {
-                    "customParameters": {},
+                    "customParameters": {"grade": grade},
                     "id": self.template,
                 }
             }
         }
-
-        if grade:
-            try:
-                grade_value = float(grade)
-                payload["credential"]["grade"] = grade_value
-                payload["customization"]["template"]["customParameters"]["grade"] = str(grade)
-            except (ValueError, TypeError):
-                payload["customization"]["template"]["customParameters"]["grade"] = str(grade)
 
         try:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")

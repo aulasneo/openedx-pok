@@ -146,7 +146,7 @@ class CertificateRenderFilter(PipelineStep):
                     "logo_src": context.get("logo_src", ""),
                     "accomplishment_copy_name": context.get("accomplishment_copy_name", "Student"),
                     "student_name": certificate.user.get_full_name(),
-                    "course_name": certificate.course.display_name,
+                    "course_name": course_id,
                     "issue_date": certificate.emission_date,
                     "certificate_image_url": certificate.view_url,
                 }

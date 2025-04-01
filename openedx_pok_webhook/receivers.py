@@ -2,7 +2,7 @@
 Open edX signal event handlers for POK certificate integration.
 """
 import logging
-from .models import Certificate
+from .models import CertificatePokApi
 from .client import PokApiClient
 
 logger = logging.getLogger(__name__)
@@ -19,18 +19,18 @@ def _process_certificate_event(event_name, certificate, **kwargs):
     """
     logger.info(f"================> Processing {event_name} event for POK integration")
     logger.info(
-        f"POK Certificate Creation Filter: User: {certificate.user.id}, Course: {course_key}, Mode: {mode}"
+        f"POK Certificate Creation Filter: User: {certificate.user.id}, Course: {certificate.course_key}, Mode: {certificate.mode}"
     )
 
-    certificate, created = Certificate.objects.get_or_create(
-        user_id=user.id,
-        course_id=str(course_key),
+    certificate, created = CertificatePokApi.objects.get_or_create(
+        user_id=certificate.user.id,
+        course_id=str(certificate.course_key),
     )
 
     pok_client = PokApiClient()
 
     if not certificate.certificate_id:
-        pok_response = pok_client.request_certificate(user, course_key, grade, mode)
+        pok_response = pok_client.request_certificate(certificate.user, certificate.course_key, certificate.grade, certificate.mode)
         is_success = pok_response.get("success")
         content = pok_response.get("content")
 
@@ -47,14 +47,14 @@ def _process_certificate_event(event_name, certificate, **kwargs):
             certificate.receiver_name = content.get('receiver', {}).get('name')
 
             certificate.save()
-            logger.info(f"Created new POK certificate record for {user.id} in {course_key}")
+            logger.info(f"Created new POK certificate record for {certificate.user.id} in {certificate.course_key}")
 
         else:
             raise Exception(f"POK Certificate Creation when called client")
 
     else:
         pok_client.get_credential_details(certificate.certificate_id)
-        logger.info(f"Getting existing POK certificate record for {user.id} in {course_key}")
+        logger.info(f"Getting existing POK certificate record for {certificate.user.id} in {certificate.course_key}")
 
 
 def certificate_created_receiver(certificate, **kwargs):

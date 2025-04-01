@@ -14,6 +14,7 @@ from openedx_filters.learning.filters import (
 
 from .models import Certificate
 from .client import PokApiClient
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
@@ -134,127 +135,29 @@ class CertificateRenderFilter(PipelineStep):
             certificate.save()
 
         if certificate.view_url:
-            logger.info(f"Redirecting to POK certificate: {certificate.view_url}")
-            response = pok_client.get_credential_details(certificate.certificate_id,
-                                                           decrypted=True)
+            logger.info(f"Rendering POK certificate for user {user_id} in course {course_id}")
 
-            if response.get("success"):
-                image_response = response.get("content")
-                image_content = image_response.get("location")
-            else:
-                image_content = certificate.view_url
-
-            html_content = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>{context.get('document_title', 'Certificate')}</title>
-                <style>
-                    body {{
-                        margin: 0;
-                        padding: 0;
-                        font-family: sans-serif;
-                    }}
-                    section {{
-                        margin: 0;
-                        padding: 20px;
-                        text-align: center;
-                    }}
-                    .banner {{
-                        background-color: #000;
-                        color: #fff;
-                        padding: 10px;
-                    }}
-                    img {{
-                        max-width: 100%;
-                        display: block;
-                        margin: 0 auto;
-                    }}
-                    .certificate-section {{
-                        padding: 20px 0;
-                    }}
-                    .info-section {{
-                        display: flex;
-                        justify-content: space-between;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        text-align: left;
-                    }}
-                    .info-column {{
-                        width: 48%;
-                    }}
-                    footer {{
-                        border-top: 1px solid #ddd;
-                        padding: 10px;
-                        font-size: 12px;
-                    }}
-                </style>
-            </head>
-            <body>
-                <!-- Logo -->
-                <section>
-                    <img src="{context.get('logo_src', '')}" alt="Logo" style="height:30px;">
-                </section>
-
-                <!-- Banner de felicitación -->
-                <section class="banner">
-                    <p>{context.get('accomplishment_copy_name', 'Student')}, you earned a certificate!</p>
-                    <p>Congratulations! This page summarizes what you accomplished.</p>
-                    <button>Print Certificate</button>
-                </section>
-
-                <!-- Título -->
-                <section>
-                    <h2>My Open edX acknowledges the following student accomplishment</h2>
-                </section>
-
-                <!-- Certificado -->
-                <section class="certificate-section">
-                    <img src="{image_content}" alt="Certificate">
-                </section>
-
-                <!-- Información adicional -->
-                <section>
-                    <h3>More about {context.get('accomplishment_copy_name', 'Student')}'s accomplishment</h3>
-
-                    <div class="info-section">
-                        <div class="info-column">
-                            <h4>About My Open edX</h4>
-                            <p>My Open edX offers interactive online classes and MOOCs.</p>
-                        </div>
-
-                        <div class="info-column">
-                            <h4>About My Open edX Accomplishments</h4>
-                            <p>My Open edX acknowledges achievements through certificates.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Footer -->
-                <footer>
-                    <p>© 2025 My Open edX. All rights reserved.</p>
-                    <p>
-                        <a href="/tos">Terms of Service</a> |
-                        <a href="/privacy">Privacy Policy</a>
-                    </p>
-                </footer>
-            </body>
-            </html>
-            """
-
-            http_response = HttpResponse(
-                content=html_content,
-                content_type="text/html; charset=utf-8",
-                status=200
+            # Render the HTML template
+            html_response = render(
+                None,
+                "openedx_pok_webhook/certificate_pok.html",
+                {
+                    "document_title": context.get("document_title", "Certificate"),
+                    "logo_src": context.get("logo_src", ""),
+                    "accomplishment_copy_name": context.get("accomplishment_copy_name", "Student"),
+                    "student_name": certificate.user.get_full_name(),
+                    "course_name": certificate.course.display_name,
+                    "issue_date": certificate.emission_date,
+                    "certificate_image_url": certificate.view_url,
+                }
             )
 
             raise CertificateRenderStarted.RenderCustomResponse(
-                message="Embedding POK certificate",
-                response=http_response
+                message="Rendering POK certificate",
+                response=html_response
             )
         else:
             logger.warning(f"Found POK certificate record for {user_id} in {course_id} but URL is missing")
-
 
         # If no POK certificate found or any error, continue with normal rendering
         return {"context": context, "custom_template": custom_template}

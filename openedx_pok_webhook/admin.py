@@ -5,7 +5,7 @@ import logging
 
 from django.contrib import admin
 
-from .models import Certificate
+from .models import CertificatePokApi
 
 logger = logging.getLogger(__name__)
 
@@ -47,4 +47,4 @@ class CertificateAdmin(admin.ModelAdmin):
 
 
 logger.debug("Registering Certificate")
-admin.site.register(Certificate, CertificateAdmin)
+admin.site.register(CertificatePokApi, CertificateAdmin)

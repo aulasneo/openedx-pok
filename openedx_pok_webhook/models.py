@@ -4,17 +4,18 @@ Database models for openedx_pok_webhook.
 
 from django.db import models
 from model_utils.models import TimeStampedModel
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
-class Certificate(TimeStampedModel):
+class CertificatePokApi(TimeStampedModel):
     """
     Model for storing POK certificate data.
     .. no_pii:
     """
-    user_id = models.IntegerField(
-        help_text="User ID associated with the certificate",
-        blank=False,
-        null=False
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
     )
     course_id = models.CharField(
         max_length=255,
@@ -22,7 +23,7 @@ class Certificate(TimeStampedModel):
         blank=False,
         null=False
     )
-    certificate_id = models.CharField(
+    pok_certificate_id = models.CharField(
         max_length=255,
         help_text="Certificate ID in the Open edX platform",
         blank=True,

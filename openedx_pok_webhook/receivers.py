@@ -18,43 +18,46 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         **kwargs: Additional keyword arguments from the signal
     """
     logger.info(f"================> Processing {event_name} event for POK integration")
+    course_id = certificate.course.course_key.__str__()
+    user = certificate.user
+    mode = certificate.mode
     logger.info(
-        f"POK Certificate Creation Filter: User: {certificate.user.id}, Course: {certificate.course_key}, Mode: {certificate.mode}"
+        f"POK Certificate Creation Receiver: User: {user.id}, Course: {course_id}, Mode: {mode}"
     )
 
-    certificate, created = CertificatePokApi.objects.get_or_create(
-        user_id=certificate.user.id,
-        course_id=str(certificate.course_key),
+    pok_certificate, created = CertificatePokApi.objects.get_or_create(
+        user_id=user.id,
+        course_id=course_id,
     )
 
     pok_client = PokApiClient()
 
-    if not certificate.certificate_id:
-        pok_response = pok_client.request_certificate(certificate.user, certificate.course_key, certificate.grade, certificate.mode)
+    if not pok_certificate.pok_certificate_id:
+        pok_response = pok_client.request_certificate(user, course_id, certificate.grade, mode)
         is_success = pok_response.get("success")
         content = pok_response.get("content")
 
         if is_success:
-            certificate.certificate_id = content.get('id')
-            certificate.state = content.get('state')
-            certificate.view_url = content.get('viewUrl')
-            certificate.emission_type = content.get('credential', {}).get('emissionType')
-            certificate.emission_date = content.get('credential', {}).get('emissionDate')
-            certificate.title = content.get('credential', {}).get('title')
-            certificate.emitter = content.get('credential', {}).get('emitter')
-            certificate.tags = content.get('credential', {}).get('tags', [])
-            certificate.receiver_email = content.get('receiver', {}).get('email')
-            certificate.receiver_name = content.get('receiver', {}).get('name')
+            pok_certificate.pok_certificate_id = content.get('id')
+            pok_certificate.state = content.get('state')
+            pok_certificate.view_url = content.get('viewUrl')
+            pok_certificate.emission_type = content.get('credential', {}).get('emissionType')
+            pok_certificate.emission_date = content.get('credential', {}).get('emissionDate')
+            pok_certificate.title = content.get('credential', {}).get('title')
+            pok_certificate.emitter = content.get('credential', {}).get('emitter')
+            pok_certificate.tags = content.get('credential', {}).get('tags', [])
+            pok_certificate.receiver_email = content.get('receiver', {}).get('email')
+            pok_certificate.receiver_name = content.get('receiver', {}).get('name')
 
-            certificate.save()
-            logger.info(f"Created new POK certificate record for {certificate.user.id} in {certificate.course_key}")
+            pok_certificate.save()
+            logger.info(f"Created new POK certificate record for {user.id} in {course_id}")
 
         else:
             raise Exception(f"POK Certificate Creation when called client")
 
     else:
-        pok_client.get_credential_details(certificate.certificate_id)
-        logger.info(f"Getting existing POK certificate record for {certificate.user.id} in {certificate.course_key}")
+        pok_client.get_credential_details(pok_certificate.pok_certificate_id)
+        logger.info(f"Getting existing POK certificate record for {user.id} in {course_id}")
 
 
 def certificate_created_receiver(certificate, **kwargs):

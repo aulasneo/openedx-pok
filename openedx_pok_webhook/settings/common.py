@@ -29,11 +29,11 @@ def plugin_settings(settings):
         "org.openedx.learning.certificate.creation.requested.v1",
         {"fail_silently": False, "pipeline": []}
     )
-
-    if "openedx_pok_webhook.filters.CertificateCreationFilter" not in certificate_creation_filter["pipeline"]:
-        certificate_creation_filter["pipeline"].append(
-            "openedx_pok_webhook.filters.CertificateCreationFilter"
-        )
+    #
+    # if "openedx_pok_webhook.filters.CertificateCreationFilter" not in certificate_creation_filter["pipeline"]:
+    #     certificate_creation_filter["pipeline"].append(
+    #         "openedx_pok_webhook.filters.CertificateCreationFilter"
+    #     )
 
     settings.OPEN_EDX_FILTERS_CONFIG["org.openedx.learning.certificate.creation.requested.v1"] = certificate_creation_filter
 

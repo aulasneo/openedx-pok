@@ -10,7 +10,7 @@ from .models import CertificatePokApi
 logger = logging.getLogger(__name__)
 
 
-class CertificateAdmin(admin.ModelAdmin):
+class CertificatePokApiAdmin(admin.ModelAdmin):
     """Admin interface for Certificate model."""
 
     list_display = [
@@ -47,4 +47,4 @@ class CertificateAdmin(admin.ModelAdmin):
 
 
 logger.debug("Registering Certificate")
-admin.site.register(CertificatePokApi, CertificateAdmin)
+admin.site.register(CertificatePokApi, CertificatePokApiAdmin)

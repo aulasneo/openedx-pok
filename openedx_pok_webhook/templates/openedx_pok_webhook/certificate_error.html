@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ document_title|default:"Certificate Error" }}</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; padding: 50px; }
+        h1 { color: red; }
+        p { font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Something went wrong</h1>
+    <p>{{ error_message|default:"We were unable to display your certificate at this time." }}</p>
+    <p>Please try again later.</p>
+</body>
+</html>

@@ -117,60 +117,63 @@ class CertificateRenderFilter(PipelineStep):
 
         logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
-        # Lookup stored POK certificate
         pok_client = PokApiClient()
 
         try:
-            certificate = CertificatePokApi.objects.get(
-                user_id=user_id,
-                course_id=course_id,
-                state="emitted"
-            )
+            certificate = CertificatePokApi.objects.get(user_id=user_id, course_id=course_id)
         except CertificatePokApi.DoesNotExist:
-            certificate = CertificatePokApi.objects.get(
-                user_id=user_id,
-                course_id=course_id
-            )
-            pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
-            content = pok_response.get("content")
-            certificate.state = content.get('state')
+            logger.warning(f"No POK certificate found for user {user_id} and course {course_id}")
+            return {"context": context, "custom_template": custom_template}
+
+        pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
+        content = pok_response.get("content", {})
+        state = content.get('state')
+
+        logger.info(f"Certificate state from POK API: {state}")
+
+        if state == "emitted":
+            certificate.state = state
             certificate.save()
 
-        if certificate.view_url:
-            logger.info(f"Rendering POK certificate for user {user_id} in course {course_id}")
+            response = pok_client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
+            image_content = response.get("content", {}).get("location", certificate.view_url)
 
-
-            response = pok_client.get_credential_details(certificate.pok_certificate_id,
-                                                           decrypted=True)
-
-            if response.get("success"):
-                image_response = response.get("content")
-                image_content = image_response.get("location")
-            else:
-                image_content = certificate.view_url
-
-            template_context = {
+            html_content = render_to_string("openedx_pok_webhook/certificate_pok.html", {
                 'document_title': context.get('document_title', 'Certificate'),
                 'logo_src': context.get('logo_src', ''),
                 'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
                 'image_content': image_content,
                 'certificate_url': certificate.view_url,
-            }
+            })
 
-            html_content = render_to_string('openedx_pok_webhook/certificate_pok.html', template_context)
+        elif state == "processing":
+            certificate.state = state
+            certificate.save()
 
-            http_response = HttpResponse(
-                content=html_content,
-                content_type="text/html; charset=utf-8",
-                status=200
-            )
+            html_content = render_to_string("openedx_pok_webhook/certificate_processing.html", {
+                'document_title': context.get('document_title', 'Certificate in process'),
+                'course_id': course_id,
+                'user_id': user_id,
+            })
 
-            raise CertificateRenderStarted.RenderCustomResponse(
-                message="Embedding POK certificate",
-                response=http_response
-            )
         else:
-            logger.warning(f"Found POK certificate record for {user_id} in {course_id} but URL is missing")
+            certificate.state = state
+            certificate.save()
 
-        # If no POK certificate found or any error, continue with normal rendering
-        return {"context": context, "custom_template": custom_template}
+            html_content = render_to_string("openedx_pok_webhook/certificate_error.html", {
+                'document_title': context.get('document_title', 'Error'),
+                'error_message': f"The current state is '{state}'. Please try again later.",
+                'course_id': course_id,
+                'user_id': user_id,
+            })
+
+        http_response = HttpResponse(
+            content=html_content,
+            content_type="text/html; charset=utf-8",
+            status=200
+        )
+
+        raise CertificateRenderStarted.RenderCustomResponse(
+            message=f"Rendering certificate page (state={state})",
+            response=http_response
+    )

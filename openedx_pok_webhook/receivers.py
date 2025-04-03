@@ -4,7 +4,8 @@ Open edX signal event handlers for POK certificate integration.
 import logging
 from .models import CertificatePokApi
 from .client import PokApiClient
-
+from openedx.core.lib.courses import get_course_by_id # pylint: disable=import-error
+from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +18,14 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         certificate: Certificate object from Open edX
         **kwargs: Additional keyword arguments from the signal
     """
+    logger.info(f"Processing {event_name} event for POK integration")
+    course_instance = get_course_by_id(certificate.course.course_key)
+    platform = getattr(settings, 'PLATFORM_NAME', "OpenedX")
+    certificate_course_info = course_instance.certificates.get("certificates")[0]
+    course_title = certificate_course_info.get("course_title")
+    signatories = certificate_course_info.get("signatories")[0]
+    signatory_name = signatories.get("name")
+    organization = signatories.get("organization")
     course_id = certificate.course.course_key.__str__()
     user = certificate.user
     mode = certificate.mode
@@ -32,7 +41,15 @@ def _process_certificate_event(event_name, certificate, **kwargs):
     pok_client = PokApiClient()
 
     if not pok_certificate.pok_certificate_id:
-        pok_response = pok_client.request_certificate(user, course_id, certificate.grade, mode)
+        pok_response = pok_client.request_certificate(user,
+                                                      course_id,
+                                                      certificate.grade,
+                                                      mode,
+                                                      platform,
+                                                      signatory_name,
+                                                      organization,
+                                                      course_title
+                                                     )
         is_success = pok_response.get("success")
         content = pok_response.get("content")
 

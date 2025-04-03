@@ -3,7 +3,9 @@
 {% block content %}
 <!-- Logo -->
 <section>
-    <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
+    <a href="{% url 'dashboard' %}">
+        <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
+    </a>
 </section>
 
 <!-- Banner de felicitación -->

@@ -16,7 +16,6 @@ from django.template.loader import render_to_string
 
 from .models import CertificatePokApi
 from .client import PokApiClient
-from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
@@ -125,25 +124,27 @@ class CertificateRenderFilter(PipelineStep):
                 course_id=course_id,
                 state="emitted"
             )
+            state = certificate.state
+
         except CertificatePokApi.DoesNotExist:
             certificate = CertificatePokApi.objects.get(
                 user_id=user_id,
                 course_id=course_id
             )
-
-        pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
-        content = pok_response.get("content", {})
-        state = content.get('state')
+            if certificate.state == "processing":
+                pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
+                content = pok_response.get("content", {})
+                state = content.get('state')
+                certificate.state = state
+                certificate.save()
+            else:
+                state = certificate.state
 
         logger.info(f"Certificate state from POK API: {state}")
 
         if state == "emitted":
-            certificate.state = state
-            certificate.save()
-
             response = pok_client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
             image_content = response.get("content", {}).get("location", certificate.view_url)
-
             html_content = render_to_string("openedx_pok_webhook/certificate_pok.html", {
                 'document_title': context.get('document_title', 'Certificate'),
                 'logo_src': context.get('logo_src', ''),
@@ -153,9 +154,6 @@ class CertificateRenderFilter(PipelineStep):
             })
 
         elif state == "processing":
-            certificate.state = state
-            certificate.save()
-
             html_content = render_to_string("openedx_pok_webhook/certificate_processing.html", {
                 'document_title': context.get('document_title', 'Certificate in process'),
                 'course_id': course_id,
@@ -163,9 +161,6 @@ class CertificateRenderFilter(PipelineStep):
             })
 
         else:
-            certificate.state = state
-            certificate.save()
-
             html_content = render_to_string("openedx_pok_webhook/certificate_error.html", {
                 'document_title': context.get('document_title', 'Error'),
                 'error_message': f"The current state is '{state}'. Please try again later.",

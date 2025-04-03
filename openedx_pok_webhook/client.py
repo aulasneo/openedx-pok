@@ -80,7 +80,16 @@ class PokApiClient:
                 'error': str(e)
             }
 
-    def request_certificate(self, user, course_key, grade, mode):
+    def request_certificate(self,
+                            user,
+                            course_key,
+                            grade,
+                            mode,
+                            platform,
+                            signatory_name,
+                            organization,
+                            course_title
+                            ):
         """
         Request a certificate from POK.
 
@@ -89,6 +98,10 @@ class PokApiClient:
             course_key: Course key string
             grade: Grade value as string or number
             mode: Certificate mode string
+            platform: Certificate platform string
+            signatory_name: Certificate signatory name string
+            organization: Certificate organization string
+            course_title: Course title string
 
         Returns:
             dict: POK API response
@@ -113,8 +126,8 @@ class PokApiClient:
                 "emissionType": "pok",
                 "dateFormat": "dd/MM/yyyy",
                 "emissionDate": datetime.now().isoformat(),
-                "title": f"Certificate for {course_key}",
-                "emitter": "Open edX"
+                "title": course_title,
+                "emitter": platform
             },
             "receiver": {
                 "languageTag": "es-ES",
@@ -125,7 +138,10 @@ class PokApiClient:
             },
             "customization": {
                 "template": {
-                    "customParameters": {"grade": grade},
+                    "customParameters": {"grade": grade,
+                                         "signatory": signatory_name,
+                                         "organization": organization,
+                                         },
                     "id": self.template,
                 }
             }

@@ -120,10 +120,16 @@ class CertificateRenderFilter(PipelineStep):
         pok_client = PokApiClient()
 
         try:
-            certificate = CertificatePokApi.objects.get(user_id=user_id, course_id=course_id)
+            certificate = CertificatePokApi.objects.get(
+                user_id=user_id,
+                course_id=course_id,
+                state="emitted"
+            )
         except CertificatePokApi.DoesNotExist:
-            logger.warning(f"No POK certificate found for user {user_id} and course {course_id}")
-            return {"context": context, "custom_template": custom_template}
+            certificate = CertificatePokApi.objects.get(
+                user_id=user_id,
+                course_id=course_id
+            )
 
         pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
         content = pok_response.get("content", {})

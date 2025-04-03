@@ -17,7 +17,6 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         certificate: Certificate object from Open edX
         **kwargs: Additional keyword arguments from the signal
     """
-    logger.info(f"================> Processing {event_name} event for POK integration")
     course_id = certificate.course.course_key.__str__()
     user = certificate.user
     mode = certificate.mode

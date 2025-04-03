@@ -2,16 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ document_title|default:"Certificate Error" }}</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; padding: 50px; }
-        h1 { color: red; }
-        p { font-size: 16px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9d5d5 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border-top: 4px solid #e63946;
+        }
+        h1 {
+            color: #e63946;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .icon {
+            color: #e63946;
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #e63946;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #d62b39;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <h1>Something went wrong</h1>
-    <p>{{ error_message|default:"We were unable to display your certificate at this time." }}</p>
-    <p>Please try again later.</p>
+    <div class="container">
+        <div class="icon">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h1>Something went wrong</h1>
+        <p>{{ error_message|default:"We were unable to display your certificate at this time." }}</p>
+        <p>Please try again later or contact support if the problem persists.</p>
+        <a href="javascript:history.back()" class="btn">Go Back</a>
+    </div>
 </body>
 </html>

@@ -20,9 +20,9 @@ class PokApiClient:
     def __init__(self):
         """Initialize the POK API client."""
         self.base_url = getattr(settings, 'POK_API_BASE_URL', 'https://api.pok.tech/')
-        self.api_key = getattr(settings, 'POK_API_KEY', 'd4769662-7173-4162-8bf6-ae175ed02076')
+        self.api_key = getattr(settings, 'POK_API_KEY')
         self.timeout = getattr(settings, 'POK_API_TIMEOUT', 10)
-        self.template = getattr(settings, 'POK_TEMPLATE', "949ae2a7-7434-492d-82c3-980caf07e1e7")
+        self.template = getattr(settings, 'POK_DEFAULT_TEMPLATE', "949ae2a7-7434-492d-82c3-980caf07e1e7")
 
     def _get_headers(self):
         """Get the common headers for API requests."""

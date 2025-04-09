@@ -8,6 +8,7 @@ signals = [
 
 class OpenedxPokWebhookConfig(AppConfig):
     name = 'openedx_pok_webhook'
+    verbose_name = "POK Certificados"
 
     plugin_app = {
         PluginURLs.CONFIG: {

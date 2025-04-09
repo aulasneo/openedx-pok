@@ -112,6 +112,14 @@ class CourseTemplate(TimeStampedModel):
         blank=False,
         null=False
     )
+    
+    emission_type = models.CharField(
+        max_length=50,
+        help_text="Type of emission (e.g., 'pok')",
+        blank=True,
+        null=True,
+        default="pok"
+    )
 
     def __str__(self):
         """

@@ -1,10 +1,5 @@
-"""
-openedx_pok_webhook Django application initialization.
-"""
-
 from django.apps import AppConfig
 from edx_django_utils.plugins.constants import PluginURLs, PluginSettings
-
 
 signals = [
     "CERTIFICATE_CREATED",
@@ -12,32 +7,32 @@ signals = [
 ]
 
 class OpenedxPokWebhookConfig(AppConfig):
-    """
-    Configuration for the openedx_pok_webhook Django application.
-    """
-
     name = 'openedx_pok_webhook'
 
     plugin_app = {
-        # PluginURLs.CONFIG: {
-        #     'cms.djangoapp': {
-        #         PluginURLs.NAMESPACE: 'get_permissions',
-        #         PluginURLs.REGEX: r'^api/v1/',
-        #         PluginURLs.RELATIVE_PATH: 'urls',
-        #     }
-        # },
-
+        PluginURLs.CONFIG: {
+            'cms.djangoapp': {
+                PluginURLs.NAMESPACE: 'openedx_pok_webhook',
+                PluginURLs.REGEX: r'^api/pok/',
+                PluginURLs.RELATIVE_PATH: 'urls',
+            },
+            'lms.djangoapp': {
+                PluginURLs.NAMESPACE: 'openedx_pok_webhook',
+                PluginURLs.REGEX: r'^api/pok/',
+                PluginURLs.RELATIVE_PATH: 'urls',
+            },
+        },
         PluginSettings.CONFIG: {
+            'cms.djangoapp': {
+                'common': {
+                    PluginSettings.RELATIVE_PATH: 'settings.common',
+                },
+            },
             'lms.djangoapp': {
                 'common': {
                     PluginSettings.RELATIVE_PATH: 'settings.common',
                 },
             },
-            'cms.djangoapp': {
-                'common': {
-                    PluginSettings.RELATIVE_PATH: 'settings.common',
-                },
-            }
         },
         "signals_config": {
             "lms.djangoapp": {

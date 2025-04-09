@@ -3,8 +3,8 @@ URLs for openedx_pok_webhook.
 """
 from django.urls import re_path  # pylint: disable=unused-import
 from django.views.generic import TemplateView  # pylint: disable=unused-import
+from .views import CourseTemplateSettingsView
 
 urlpatterns = [
-    # TODO: Fill in URL patterns and views here.
-    # re_path(r'', TemplateView.as_view(template_name="openedx_pok_webhook/base.html")),
+    re_path(r'^settings/(?P<course_id>[^/]+)/$', CourseTemplateSettingsView.as_view(), name='pok-course-settings')
 ]

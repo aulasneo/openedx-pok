@@ -44,6 +44,6 @@ class CertificatePokApiAdmin(admin.ModelAdmin):
 class CourseTemplateAdmin(admin.ModelAdmin):
     """Admin interface for CourseTemplate model."""
 
-    list_display = ['course', 'template_id', 'created', 'modified']
+    list_display = ['course', 'template_id', 'emission_type','created', 'modified']
     search_fields = ['course__id', 'template_id']
     readonly_fields = ['created', 'modified']

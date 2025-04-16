@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
+from opaque_keys.edx.keys import CourseKey
+from openedx_pok_webhook.models import CourseTemplate
 
 from openedx_pok_webhook.utils import split_name
 
@@ -17,12 +19,15 @@ logger = logging.getLogger(__name__)
 class PokApiClient:
     """Client for POK API."""
 
-    def __init__(self):
+    def __init__(self, course_id: str):
         """Initialize the POK API client."""
-        self.base_url = getattr(settings, 'POK_API_BASE_URL', 'https://api.pok.tech/')
-        self.api_key = getattr(settings, 'POK_API_KEY')
-        self.timeout = getattr(settings, 'POK_API_TIMEOUT', 10)
-        self.template = getattr(settings, 'POK_DEFAULT_TEMPLATE', "949ae2a7-7434-492d-82c3-980caf07e1e7")
+        course_key = CourseKey.from_string(course_id)
+        template = CourseTemplate.objects.get(course=course_key)
+        self.api_key = template.api_key
+        self.template = template.template_id
+        self.emission_type = template.emission_type
+        self.base_url = settings.POK_API_URL
+        self.timeout = settings.POK_TIMEOUT
 
     def _get_headers(self):
         """Get the common headers for API requests."""
@@ -81,39 +86,23 @@ class PokApiClient:
             }
 
     def request_certificate(self,
-                            user,
-                            course_key,
-                            grade,
-                            mode,
-                            platform,
-                            signatory_name,
-                            organization,
-                            course_title
-                            ):
-        """
-        Request a certificate from POK.
-
-        Args:
-            user: User object
-            course_key: Course key string
-            grade: Grade value as string or number
-            mode: Certificate mode string
-            platform: Certificate platform string
-            signatory_name: Certificate signatory name string
-            organization: Certificate organization string
-            course_title: Course title string
-
-        Returns:
-            dict: POK API response
-        """
+                        user,
+                        course_key,
+                        grade,
+                        mode,
+                        platform,
+                        signatory_name,
+                        organization,
+                        course_title
+                        ):
         endpoint = urljoin(self.base_url, 'credential/')
         email = user.pii.email if hasattr(user, 'pii') else user.email
 
         if hasattr(user, 'pii'):
             first_name, last_name = split_name(user.pii.name)
         else:
-             first_name = user.first_name
-             last_name = user.last_name
+            first_name = user.first_name
+            last_name = user.last_name
 
         payload = {
             "credential": {
@@ -138,10 +127,10 @@ class PokApiClient:
             },
             "customization": {
                 "template": {
-                    "customParameters": {"grade": grade,
-                                         "signatory": signatory_name,
-                                         "organization": organization,
-                                         },
+                    "customParameters": {
+                        "grade": grade,
+                        "signatory": signatory_name
+                    },
                     "id": self.template,
                 }
             }
@@ -151,34 +140,27 @@ class PokApiClient:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
             logger.debug(f"POK API request payload: {json.dumps(payload)}")
 
-            header = self._get_headers()
-            response = requests.post(
-                endpoint,
-                json=payload,
-                headers=header,
-            )
-            response.raise_for_status()
-            return_data = response.json()
+            response = requests.post(endpoint, json=payload, headers=self._get_headers())
 
             if response.status_code != 200:
-                raise requests.exceptions.RequestException("Error creating certificate with POK")
+                logger.error(f"POK returned non-200 status: {response.status_code}, body: {response.text}")
+                return {
+                    'success': False,
+                    'error': f"Non-200 status: {response.status_code}",
+                    'content': response.json()
+                }
 
+            return_data = response.json()
             credential_id = return_data.get("id")
-
             return self.get_credential_details(credential_id)
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error requesting certificate from POK: {str(e)}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {'success': False, 'error': str(e)}
+
         except Exception as e:
             logger.exception(f"Unexpected error in POK API client: {str(e)}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {'success': False, 'error': str(e)}
 
     def get_credential_details(self, certificate_id, decrypted=None):
         """

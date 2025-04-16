@@ -120,6 +120,13 @@ class CourseTemplate(TimeStampedModel):
         null=True,
         default="pok"
     )
+    
+    api_key = models.TextField(
+        help_text="API key for the course",
+        blank=True,
+        null=True
+    )
+    
 
     def __str__(self):
         """

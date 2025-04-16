@@ -20,76 +20,6 @@ from .client import PokApiClient
 logger = logging.getLogger(__name__)
 
 
-# class CertificateCreationFilter(PipelineStep):
-#     """
-#     Process CertificateCreationRequested filter to call POK API.
-#
-#     This filter intercepts certificate creation requests, calls the POK API,
-#     and stores the response in the Certificate model.
-#     """
-#
-#     def run_filter(self, user, course_key, mode, status, grade, generation_mode):  # pylint: disable=arguments-differ
-#         """
-#         Execute the filter.
-#
-#         Arguments:
-#             user (User): is a Django User object.
-#             course_key (CourseKey): course key associated with the certificate.
-#             mode (str): mode of the certificate.
-#             status (str): status of the certificate.
-#             grade (CourseGrade): user's grade in this course run.
-#             generation_mode (str): Options are "self" (implying the user generated the cert themselves)
-#                                   and "batch" for everything else.
-#         """
-#         logger.info(
-#             f"POK Certificate Creation Filter: User: {user.id}, Course: {course_key}, Mode: {mode}"
-#         )
-#
-#         certificate, created = Certificate.objects.get_or_create(
-#             user_id=user.id,
-#             course_id=str(course_key),
-#         )
-#
-#         pok_client = PokApiClient()
-#
-#         if not certificate.certificate_id:
-#             pok_response = pok_client.request_certificate(user, course_key, grade, mode)
-#             is_success = pok_response.get("success")
-#             content = pok_response.get("content")
-#
-#             if is_success:
-#                 certificate.certificate_id = content.get('id')
-#                 certificate.state = content.get('state')
-#                 certificate.view_url = content.get('viewUrl')
-#                 certificate.emission_type = content.get('credential', {}).get('emissionType')
-#                 certificate.emission_date = content.get('credential', {}).get('emissionDate')
-#                 certificate.title = content.get('credential', {}).get('title')
-#                 certificate.emitter = content.get('credential', {}).get('emitter')
-#                 certificate.tags = content.get('credential', {}).get('tags', [])
-#                 certificate.receiver_email = content.get('receiver', {}).get('email')
-#                 certificate.receiver_name = content.get('receiver', {}).get('name')
-#
-#                 certificate.save()
-#                 logger.info(f"Created new POK certificate record for {user.id} in {course_key}")
-#
-#             else:
-#                 raise Exception(f"POK Certificate Creation when called client")
-#
-#         else:
-#             pok_client.get_credential_details(certificate.certificate_id)
-#             logger.info(f"Getting existing POK certificate record for {user.id} in {course_key}")
-#
-#
-#         # Continue with normal certificate creation process
-#         return {
-#             "user": user,
-#             "course_key": course_key,
-#             "mode": mode,
-#             "status": status,
-#             "grade": grade,
-#             "generation_mode": generation_mode,
-#         }
-
 
 class CertificateRenderFilter(PipelineStep):
     """
@@ -100,6 +30,7 @@ class CertificateRenderFilter(PipelineStep):
     """
 
     def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
+        print("✅ --------------------------------------------------")
         """
         Execute the filter.
 
@@ -108,15 +39,17 @@ class CertificateRenderFilter(PipelineStep):
             custom_template (CertificateTemplate): edxapp object representing custom web certificate template.
         """
         user_id = context.get('accomplishment_user_id')
+        print("✅ USERRRRRRR", user_id)
         course_id = context.get('course_id')
-
+        print("✅ COURSEEEEEE", course_id)
         if not user_id or not course_id:
             logger.warning("Missing user_id or course_id in certificate render context")
             return {"context": context, "custom_template": custom_template}
 
         logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
-        pok_client = PokApiClient()
+        pok_client = PokApiClient(course_id)
+        print("✅ POK_CLIENT ---------------------------", pok_client)
 
         try:
             certificate = CertificatePokApi.objects.get(

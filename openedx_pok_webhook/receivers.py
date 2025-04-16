@@ -37,8 +37,10 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         user_id=user.id,
         course_id=course_id,
     )
+    
+    logger.info(f"POK Certificate Record -----------------------------------------------------: {pok_certificate}")
 
-    pok_client = PokApiClient()
+    pok_client = PokApiClient(course_id)
 
     if not pok_certificate.pok_certificate_id:
         pok_response = pok_client.request_certificate(user,

@@ -2,6 +2,7 @@
 Open edX signal event handlers for POK certificate integration.
 """
 import logging
+
 from .models import CertificatePokApi
 from .client import PokApiClient
 from openedx.core.lib.courses import get_course_by_id # pylint: disable=import-error
@@ -37,8 +38,6 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         user_id=user.id,
         course_id=course_id,
     )
-    
-    logger.info(f"POK Certificate Record -----------------------------------------------------: {pok_certificate}")
 
     pok_client = PokApiClient(course_id)
 
@@ -89,7 +88,9 @@ def certificate_created_receiver(certificate, **kwargs):
         certificate: Certificate object from Open edX
         **kwargs: Additional keyword arguments from the signal
     """
+    logger.info(f"Processing CERTIFICATE_CREATED event for POK integration")
     _process_certificate_event("CERTIFICATE_CREATED", certificate, **kwargs)
+    
 
 
 def certificate_changed_receiver(certificate, **kwargs):

@@ -30,7 +30,6 @@ class CertificateRenderFilter(PipelineStep):
     """
 
     def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
-        print("✅ --------------------------------------------------")
         """
         Execute the filter.
 
@@ -39,9 +38,7 @@ class CertificateRenderFilter(PipelineStep):
             custom_template (CertificateTemplate): edxapp object representing custom web certificate template.
         """
         user_id = context.get('accomplishment_user_id')
-        print("✅ USERRRRRRR", user_id)
         course_id = context.get('course_id')
-        print("✅ COURSEEEEEE", course_id)
         if not user_id or not course_id:
             logger.warning("Missing user_id or course_id in certificate render context")
             return {"context": context, "custom_template": custom_template}
@@ -49,7 +46,6 @@ class CertificateRenderFilter(PipelineStep):
         logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
         pok_client = PokApiClient(course_id)
-        print("✅ POK_CLIENT ---------------------------", pok_client)
 
         try:
             certificate = CertificatePokApi.objects.get(

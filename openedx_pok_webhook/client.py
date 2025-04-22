@@ -20,12 +20,18 @@ class PokApiClient:
     """Client for POK API."""
 
     def __init__(self, course_id: str):
-        """Initialize the POK API client."""
+        """Inicializa el cliente de la API POK."""
         course_key = CourseKey.from_string(course_id)
-        template = CourseTemplate.objects.get(course=course_key)
-        self.api_key = template.api_key
-        self.template = template.template_id
-        self.emission_type = template.emission_type
+
+        try:
+            template = CourseTemplate.objects.get(course=course_key)
+        except CourseTemplate.DoesNotExist:
+            template = None
+
+        self.api_key = template.api_key if template else settings.POK_API_KEY
+        self.template = template.template_id if template else settings.TEMPLATE_ID
+        self.emission_type = template.emission_type if template else "pok"
+        
         self.base_url = settings.POK_API_URL
         self.timeout = settings.POK_TIMEOUT
 

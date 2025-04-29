@@ -28,8 +28,8 @@ class PokApiClient:
         except CourseTemplate.DoesNotExist:
             template = None
 
-        self.api_key = template.api_key if template else settings.POK_API_KEY
-        self.template = template.template_id if template else settings.TEMPLATE_ID
+        self.api_key =  settings.POK_API_KEY
+        self.template = template.template_id if template else settings.POK_TEMPLATE_ID
         self.emission_type = template.emission_type if template else "pok"
         
         self.base_url = settings.POK_API_URL

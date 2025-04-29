@@ -10,24 +10,11 @@ def plugin_settings(settings):
     # POK API settings
     settings.POK_API_URL = 'https://api.pok.tech/'
     settings.POK_TIMEOUT = 20
-    settings.TEMPLATE_ID = "949ae2a7-7434-492d-82c3-980caf07e1e7"
-    settings.POK_API_KEY = "d4769662-7173-4162-8bf6-ae175ed02076"
+    settings.POK_TEMPLATE_ID = ""
+    settings.POK_API_KEY = ""
 
     # Configure filters
     settings.OPEN_EDX_FILTERS_CONFIG = getattr(settings, 'OPEN_EDX_FILTERS_CONFIG', {})
-
-    # Filter for certificate creation
-    certificate_creation_filter = settings.OPEN_EDX_FILTERS_CONFIG.get(
-        "org.openedx.learning.certificate.creation.requested.v1",
-        {"fail_silently": False, "pipeline": []}
-    )
-    #
-    # if "openedx_pok_webhook.filters.CertificateCreationFilter" not in certificate_creation_filter["pipeline"]:
-    #     certificate_creation_filter["pipeline"].append(
-    #         "openedx_pok_webhook.filters.CertificateCreationFilter"
-    #     )
-
-    settings.OPEN_EDX_FILTERS_CONFIG["org.openedx.learning.certificate.creation.requested.v1"] = certificate_creation_filter
 
     # Filter for certificate rendering
     certificate_render_filter = settings.OPEN_EDX_FILTERS_CONFIG.get(

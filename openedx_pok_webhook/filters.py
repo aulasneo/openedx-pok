@@ -46,6 +46,10 @@ class CertificateRenderFilter(PipelineStep):
         logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
         pok_client = PokApiClient(course_id)
+        
+        if not pok_client.api_key:
+            logger.warning("POK API key is not set. Skipping POK certificate rendering.")
+            return {"context": context, "custom_template": custom_template}
 
         try:
             certificate = CertificatePokApi.objects.get(

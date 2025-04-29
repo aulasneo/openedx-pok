@@ -115,17 +115,16 @@ class CourseTemplate(TimeStampedModel):
     
     emission_type = models.CharField(
         max_length=50,
-        help_text="Type of emission (e.g., 'pok')",
+        help_text="Type of emission (blockchain or pok)",
         blank=True,
         null=True,
-        default="pok"
+        default="pok",
+        choices=[
+            ('pok', 'POK'),
+            ('blockchain', 'Blockchain')
+        ]
     )
     
-    api_key = models.TextField(
-        help_text="API key for the course",
-        blank=True,
-        null=True
-    )
     
 
     def __str__(self):

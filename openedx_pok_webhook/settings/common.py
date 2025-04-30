@@ -9,7 +9,7 @@ def plugin_settings(settings):
     """
     # POK API settings
     settings.POK_API_URL = 'https://api.pok.tech/'
-    settings.POK_TIMEOUT = 20
+    settings.POK_TIMEOUT = 60
     settings.POK_TEMPLATE_ID = ""
     settings.POK_API_KEY = ""
 

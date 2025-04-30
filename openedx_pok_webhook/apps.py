@@ -7,18 +7,18 @@ signals = [
 ]
 
 class OpenedxPokWebhookConfig(AppConfig):
-    name = 'openedx_pok_webhook'
-    verbose_name = "POK Certificados"
+    name = 'openedx_pok'
+    verbose_name = "POK"
 
     plugin_app = {
         PluginURLs.CONFIG: {
             'cms.djangoapp': {
-                PluginURLs.NAMESPACE: 'openedx_pok_webhook',
+                PluginURLs.NAMESPACE: 'openedx_pok',
                 PluginURLs.REGEX: r'^api/pok/',
                 PluginURLs.RELATIVE_PATH: 'urls',
             },
             'lms.djangoapp': {
-                PluginURLs.NAMESPACE: 'openedx_pok_webhook',
+                PluginURLs.NAMESPACE: 'openedx_pok',
                 PluginURLs.REGEX: r'^api/pok/',
                 PluginURLs.RELATIVE_PATH: 'urls',
             },

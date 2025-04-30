@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
-from openedx_pok_webhook.models import CourseTemplate
+from openedx_pok_webhook.models import CertificateTemplate
 
 from openedx_pok_webhook.utils import split_name
 
@@ -24,8 +24,8 @@ class PokApiClient:
         course_key = CourseKey.from_string(course_id)
 
         try:
-            template = CourseTemplate.objects.get(course=course_key)
-        except CourseTemplate.DoesNotExist:
+            template = CertificateTemplate.objects.get(course=course_key)
+        except CertificateTemplate.DoesNotExist:
             template = None
 
         self.api_key = template.api_key if template else settings.POK_API_KEY
@@ -41,6 +41,47 @@ class PokApiClient:
             'Authorization': f'ApiKey {self.api_key}',
             'Accept': 'application/json',
             # 'Content-Type': 'application/json',
+        }
+        
+    def _build_payload(self, user, course_key, grade, mode, platform, signatory_name, organization, course_title):
+        email = user.pii.email if hasattr(user, 'pii') else user.email
+
+        if hasattr(user, 'pii'):
+            first_name, last_name = split_name(user.pii.name)
+        else:
+            first_name = user.first_name
+            last_name = user.last_name
+
+        return {
+            "credential": {
+                "tags": [
+                    f"StudentId:{user.id}",
+                    f"CourseId:{course_key}",
+                    f"Mode:{mode}"
+                ],
+                "skipAcceptance": True,
+                "emissionType": self.emission_type,
+                "dateFormat": "dd/MM/yyyy",
+                "emissionDate": datetime.now().isoformat(),
+                "title": course_title,
+                "emitter": platform
+            },
+            "receiver": {
+                "languageTag": "es-ES",
+                "identification": str(user.id),
+                "email": email,
+                "lastName": last_name,
+                "firstName": first_name
+            },
+            "customization": {
+                "template": {
+                    "customParameters": {
+                        "grade": grade,
+                        "signatory": signatory_name
+                    },
+                    "id": self.template,
+                }
+            }
         }
 
     def get_organization_details(self):
@@ -167,6 +208,24 @@ class PokApiClient:
         except Exception as e:
             logger.exception(f"Unexpected error in POK API client: {str(e)}")
             return {'success': False, 'error': str(e)}
+        
+    def get_template_preview(self, user, course_key, grade, mode, platform, signatory_name, organization, course_title):
+        """
+        Get a preview image of a certificate template using the same payload as issuance.
+        """
+        endpoint = urljoin(self.base_url, "template-preview")
+        payload = self._build_payload(user, course_key, grade, mode, platform, signatory_name, organization, course_title)
+
+        try:
+            logger.info(f"Requesting certificate template preview for user {user.id}")
+            logger.debug(f"Template preview payload: {json.dumps(payload)}")
+
+            response = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return {"success": True, "preview": response.json()}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching template preview: {str(e)}")
+            return {"success": False, "error": str(e)}
 
     def get_credential_details(self, certificate_id, decrypted=None):
         """

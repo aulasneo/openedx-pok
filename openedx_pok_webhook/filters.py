@@ -6,15 +6,12 @@ import logging
 from django.http import HttpResponse
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import (
-    CertificateCreationRequested,
     CertificateRenderStarted,
-    CourseAboutRenderStarted,
-    DashboardRenderStarted
 )
 
 from django.template.loader import render_to_string
 
-from .models import CertificatePokApi
+from .models import PokCertificate
 from .client import PokApiClient
 
 logger = logging.getLogger(__name__)
@@ -48,29 +45,39 @@ class CertificateRenderFilter(PipelineStep):
         pok_client = PokApiClient(course_id)
 
         try:
-            certificate = CertificatePokApi.objects.get(
+            certificate = PokCertificate.objects.get(
                 user_id=user_id,
                 course_id=course_id,
                 state="emitted"
             )
             state = certificate.state
 
-        except CertificatePokApi.DoesNotExist:
-            certificate = CertificatePokApi.objects.get(
-                user_id=user_id,
-                course_id=course_id
-            )
-            if certificate.state == "processing":
-                pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
-                content = pok_response.get("content", {})
-                state = content.get('state')
-                certificate.state = state
-                certificate.save()
-            else:
-                state = certificate.state
+        except PokCertificate.DoesNotExist:
+            try:
+                certificate = PokCertificate.objects.get(
+                    user_id=user_id,
+                    course_id=course_id
+                )
+                
+                if certificate.state == "processing":
+                    pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
+                    content = pok_response.get("content", {})
+                    state = content.get('state')
+                    certificate.state = state
+                    certificate.save()
+                else:
+                    state = certificate.state
+                
+            except PokCertificate.DoesNotExist:
+                state = "preview"
+                
+                
+            
 
         logger.info(f"Certificate state from POK API: {state}")
 
+        
+        
         if state == "emitted":
             response = pok_client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
             image_content = response.get("content", {}).get("location", certificate.view_url)

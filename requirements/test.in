@@ -2,7 +2,14 @@
 -c constraints.txt
 
 -r base.txt               # Core dependencies for this package
+# Dependencias de pruebas
+pytest
+pytest-django
+pytest-cov
 
-pytest-cov                # pytest extension for code coverage statistics
-pytest-django             # pytest extension for better Django support
-code-annotations          # provides commands used by the pii_check make target.
+# Dependencias de Open edX
+edx-django-utils
+edx-opaque-keys
+
+# Dependencias adicionales
+djangorestframework-jwt

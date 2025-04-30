@@ -4,7 +4,22 @@
 
 -r test.txt               # Core and testing dependencies for this package
 
-edx-lint                  # edX pylint rules and plugins
-isort                     # to standardize order of imports
-pycodestyle               # PEP 8 compliance validation
-pydocstyle                # PEP 257 compliance validation
+# Dependencias de calidad
+pylint
+pycodestyle
+pydocstyle
+isort
+edx-lint
+code-annotations
+
+# Dependencias de seguridad
+bandit
+safety
+
+# Dependencias de Open edX
+edx-django-utils
+edx-opaque-keys
+
+# Dependencias adicionales
+django-compressor
+whitenoise

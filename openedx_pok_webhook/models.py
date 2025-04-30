@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class CertificatePokApi(TimeStampedModel):
+class PokCertificate(TimeStampedModel):
     """
     Model for storing POK certificate data.
     .. no_pii:
@@ -98,7 +98,7 @@ class CertificatePokApi(TimeStampedModel):
         """
         return f'POK Certificate for user {self.user_id} in course {self.course_id}'
 
-class CourseTemplate(TimeStampedModel):
+class CertificateTemplate(TimeStampedModel):
     """
     Model for linking a course with a template.
     """

@@ -7,7 +7,7 @@ signals = [
 ]
 
 class OpenedxPokWebhookConfig(AppConfig):
-    name = 'openedx_pok'
+    name = 'openedx_pok_webhook'
     verbose_name = "POK"
 
     plugin_app = {

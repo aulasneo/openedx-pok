@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from openedx_pok_webhook.models import CourseTemplate
+from openedx_pok_webhook.models import CertificateTemplate
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from opaque_keys.edx.keys import CourseKey
 
@@ -16,14 +16,14 @@ class CourseTemplateSettingsView(APIView):
         """
         try:
             course_key = CourseKey.from_string(course_id)
-            course_template = CourseTemplate.objects.get(course__id=course_key)
+            course_template = CertificateTemplate.objects.get(course__id=course_key)
             return Response({
                 "course_id": str(course_template.course.id),
                 "template_id": course_template.template_id,
                 "created": course_template.created,
                 "modified": course_template.modified,
             }, status=status.HTTP_200_OK)
-        except CourseTemplate.DoesNotExist:
+        except CertificateTemplate.DoesNotExist:
             return Response({
                 "course_id": course_id,
                 "template_id": "",
@@ -48,7 +48,7 @@ class CourseTemplateSettingsView(APIView):
             course_key = CourseKey.from_string(course_id)
             course = CourseOverview.objects.get(id=course_key)
 
-            course_template, created = CourseTemplate.objects.update_or_create(
+            course_template, created = CertificateTemplate.objects.update_or_create(
                 course=course,
                 defaults={
                     "template_id": template_id,

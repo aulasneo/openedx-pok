@@ -137,7 +137,7 @@ setup(
     author_email='lberoes@aulasneo.com',
     url='https://github.com/openedx/openedx-pok',
     packages=find_packages(
-        include=['openedx_pok_webhook', 'openedx_pok_webhook.*'],
+        include=['openedx_pok', 'openedx_pok.*'],
         exclude=["*tests"],
     ),
 

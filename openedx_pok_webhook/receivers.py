@@ -3,7 +3,7 @@ Open edX signal event handlers for POK certificate integration.
 """
 import logging
 
-from .models import CertificatePokApi
+from .models import PokCertificate
 from .client import PokApiClient
 from openedx.core.lib.courses import get_course_by_id # pylint: disable=import-error
 from django.conf import settings
@@ -34,7 +34,7 @@ def _process_certificate_event(event_name, certificate, **kwargs):
         f"POK Certificate Creation Receiver: User: {user.id}, Course: {course_id}, Mode: {mode}"
     )
 
-    pok_certificate, created = CertificatePokApi.objects.get_or_create(
+    pok_certificate, created = PokCertificate.objects.get_or_create(
         user_id=user.id,
         course_id=course_id,
     )

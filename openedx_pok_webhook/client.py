@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
-from openedx_pok_webhook.models import CourseTemplate
+from openedx_pok_webhook.models import CertificateTemplate
 
 from openedx_pok_webhook.utils import split_name
 
@@ -24,8 +24,8 @@ class PokApiClient:
         course_key = CourseKey.from_string(course_id)
 
         try:
-            template = CourseTemplate.objects.get(course=course_key)
-        except CourseTemplate.DoesNotExist:
+            template = CertificateTemplate.objects.get(course=course_key)
+        except CertificateTemplate.DoesNotExist:
             template = None
 
         self.api_key =  settings.POK_API_KEY

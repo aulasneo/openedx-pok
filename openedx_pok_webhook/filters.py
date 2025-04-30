@@ -6,15 +6,12 @@ import logging
 from django.http import HttpResponse
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import (
-    CertificateCreationRequested,
     CertificateRenderStarted,
-    CourseAboutRenderStarted,
-    DashboardRenderStarted
 )
 
 from django.template.loader import render_to_string
 
-from .models import CertificatePokApi
+from .models import PokCertificate
 from .client import PokApiClient
 
 logger = logging.getLogger(__name__)
@@ -52,15 +49,15 @@ class CertificateRenderFilter(PipelineStep):
             return {"context": context, "custom_template": custom_template}
 
         try:
-            certificate = CertificatePokApi.objects.get(
+            certificate = PokCertificate.objects.get(
                 user_id=user_id,
                 course_id=course_id,
                 state="emitted"
             )
             state = certificate.state
 
-        except CertificatePokApi.DoesNotExist:
-            certificate = CertificatePokApi.objects.get(
+        except PokCertificate.DoesNotExist:
+            certificate = PokCertificate.objects.get(
                 user_id=user_id,
                 course_id=course_id
             )

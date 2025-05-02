@@ -4,18 +4,103 @@ POK certificate filter implementations.
 import json
 import logging
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import (
-    CertificateRenderStarted,
+    CertificateRenderStarted, CertificateCreationRequested
 )
 
 from django.template.loader import render_to_string
 
 from .models import PokCertificate
 from .client import PokApiClient
+from openedx.core.lib.courses import get_course_by_id
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
+class CertificateCreatedFilter(PipelineStep):
+    """
+    Filter to handle the creation of POK certificates when a certificate is issued.
+    """
+
+    def run_filter(self, **kwargs):
+        # 🔍 Log completo del contexto
+        logger.info(f"[POK] CertificateCreatedFilter kwargs context: {json.dumps({k: str(v) for k, v in kwargs.items()}, indent=2)}")
+
+        user = kwargs.get("user")
+        course_key = kwargs.get("course_key")
+        grade_obj = kwargs.get("grade")
+        enrollment_mode = kwargs.get("enrollment_mode")
+
+        if not user or not course_key:
+            logger.error("[POK] Missing user or course_key in certificate creation context.")
+            raise CertificateCreationRequested.PreventCertificateCreation(
+                message="[POK] Missing required context to create certificate."
+            )
+
+        course_id_str = str(course_key)
+
+        try:
+            logger.info(f"[POK] Triggered CertificateCreatedFilter for user={user.id}, course={course_id_str}")
+
+            course_instance = get_course_by_id(course_key)
+            course_cert_data = course_instance.certificates.get("certificates")[0]
+            course_title = course_cert_data.get("course_title", "Course")
+            signatory = course_cert_data.get("signatories", [{}])[0]
+            signatory_name = signatory.get("name", "Instructor")
+            organization = signatory.get("organization", "Organization")
+            platform = getattr(settings, 'PLATFORM_NAME', "OpenedX")
+
+            pok_certificate, _ = PokCertificate.objects.get_or_create(
+                user_id=user.id,
+                course_id=course_id_str,
+            )
+
+            pok_client = PokApiClient(course_id_str)
+
+            if not pok_certificate.pok_certificate_id:
+                response = pok_client.request_certificate(
+                    user=user,
+                    course_key=course_id_str,
+                    mode=enrollment_mode,
+                    platform=platform,
+                    organization=organization,
+                    course_title=course_title,
+                    grade=str(grade_obj.percent if grade_obj and hasattr(grade_obj, "percent") else 0),
+                    signatory_name=signatory_name,
+                )
+
+                if response.get("success"):
+                    data = response["content"]
+                    
+                    pok_certificate.pok_certificate_id = data.get("id")
+                    pok_certificate.state = data.get("state")
+                    pok_certificate.view_url = data.get("viewUrl")
+                    pok_certificate.emission_type = data.get("credential", {}).get("emissionType")
+                    pok_certificate.emission_date = data.get("credential", {}).get("emissionDate")
+                    pok_certificate.title = data.get("credential", {}).get("title")
+                    pok_certificate.emitter = data.get("credential", {}).get("emitter")
+                    pok_certificate.tags = data.get("credential", {}).get("tags", [])
+                    pok_certificate.receiver_email = data.get("receiver", {}).get("email")
+                    pok_certificate.receiver_name = data.get("receiver", {}).get("name")
+                    pok_certificate.save()
+
+                    logger.info(f"[POK] Certificate created and stored for user={user.id}, course={course_id_str}")
+                else:
+                    error_msg = f"[POK] API certificate request failed: {response.get('error')}"
+                    logger.error(error_msg)
+                    raise CertificateCreationRequested.PreventCertificateCreation(message=error_msg)
+            else:
+                logger.info(f"[POK] Existing certificate already found for user={user.id}, course={course_id_str}")
+
+        except Exception as e:
+            logger.exception(f"[POK] Unexpected error in CertificateCreatedFilter: {str(e)}")
+            raise CertificateCreationRequested.PreventCertificateCreation(
+                message=f"[POK] Unhandled exception during certificate creation: {str(e)}"
+            )
+
+        return kwargs
+
 
 
 
@@ -69,7 +154,6 @@ class CertificateRenderFilter(PipelineStep):
                 )
                 logger.info("Found processing POK certificate.")
 
-                # Verifica si ya fue emitido consultando la API
                 pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
                 content = pok_response.get("content", {})
                 state = content.get("state", "processing")
@@ -85,9 +169,6 @@ class CertificateRenderFilter(PipelineStep):
 
 
         logger.info(f"Certificate state from POK API: {state}")
-        #logger.error(f"CONTEXT: {context}")
-             
-
 
         if state == "emitted":
             try:
@@ -140,6 +221,11 @@ class CertificateRenderFilter(PipelineStep):
             })
             
         elif state == "preview":
+            # ------------------------------------------------------------------------
+            # PREVIEW MODE: This is triggered from the CMS (Instructor Preview).
+            # In this mode we simulate what the certificate will look like
+            # without requiring a generated certificate.
+            # ------------------------------------------------------------------------
             logger.info("POK certificate in 'preview' state detected. Attempting to generate preview URL.")
 
             from django.contrib.auth import get_user_model
@@ -156,33 +242,22 @@ class CertificateRenderFilter(PipelineStep):
 
             preview_response = pok_client.get_template_preview(
                 user=user,
-                course_key=course_id,
-                grade=context.get("certificate_data", {}).get("description", "N/A"),  # o usa otro campo si representa mejor la nota
-                mode=context.get("course_mode", "honor"),
-                platform=context.get("platform_name", "Open edX"),
                 signatory_name=context.get("certificate_data", {}).get("signatories", [{}])[0].get("name", "Instructor"),
                 organization=context.get("organization_long_name", "Organization"),
-                course_title=context.get("certificate_data", {}).get("course_title", "Course")
+                course_title=context.get("certificate_data", {}).get("course_title", "Course"),
+                grade=context.get("certificate_data", {}).get("description", "N/A"),
             )
 
             if preview_response.get("success"):
                 logger.info("POK preview request succeeded.")
 
-                # Intentar extraer la URL de previsualización desde diferentes campos posibles
-                preview_url = (
-                    preview_response.get("preview_url") or
-                    preview_response.get("preview", {}).get("previewUrl") or
-                    preview_response.get("preview", {}).get("preview_url") or
-                    preview_response.get("preview", {}).get("url") or
-                    preview_response.get("preview", {}).get("location")
-                )
+                preview_url = preview_response.get("preview_url")
 
                 if not preview_url:
                     logger.error(f"POK preview URL not found in response: {json.dumps(preview_response, indent=2)}")
                     return {"context": context, "custom_template": custom_template}
 
                 logger.info(f"Redirecting to POK certificate preview URL: {preview_url}")
-                from django.http import HttpResponseRedirect
                 raise CertificateRenderStarted.RenderCustomResponse(
                     message="Redirecting to certificate preview",
                     response=HttpResponseRedirect(preview_url)

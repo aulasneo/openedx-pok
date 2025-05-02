@@ -2,29 +2,56 @@
 """
 Common settings for openedx_pok_webhook.
 """
+import logging
+
+logger = logging.getLogger(__name__)
 
 def plugin_settings(settings):
     """
     Defines POK webhook settings for Open edX environments.
     """
-    # POK API settings
+
+    # POK API config
     settings.POK_API_URL = 'https://api.pok.tech/'
     settings.POK_TIMEOUT = 60
     settings.POK_TEMPLATE_ID = ""
     settings.POK_API_KEY = ""
 
-    # Configure filters
-    settings.OPEN_EDX_FILTERS_CONFIG = getattr(settings, 'OPEN_EDX_FILTERS_CONFIG', {})
+    # Log inicio de configuración
+    logger.info("[POK] Applying plugin_settings for openedx_pok_webhook...")
 
-    # Filter for certificate rendering
-    certificate_render_filter = settings.OPEN_EDX_FILTERS_CONFIG.get(
-        "org.openedx.learning.certificate.render.started.v1",
-        {"fail_silently": False, "pipeline": []}
-    )
+    # Ensure OPEN_EDX_FILTERS_CONFIG exists
+    if not hasattr(settings, "OPEN_EDX_FILTERS_CONFIG"):
+        settings.OPEN_EDX_FILTERS_CONFIG = {}
 
-    if "openedx_pok_webhook.filters.CertificateRenderFilter" not in certificate_render_filter["pipeline"]:
-        certificate_render_filter["pipeline"].append(
-            "openedx_pok_webhook.filters.CertificateRenderFilter"
-        )
+    # ----------------------------
+    # Certificate Render Filter
+    # ----------------------------
+    render_filter_key = "org.openedx.learning.certificate.render.started.v1"
+    render_pipeline = settings.OPEN_EDX_FILTERS_CONFIG.get(render_filter_key, {
+        "fail_silently": False,
+        "pipeline": []
+    })
 
-    settings.OPEN_EDX_FILTERS_CONFIG["org.openedx.learning.certificate.render.started.v1"] = certificate_render_filter
+    if "openedx_pok_webhook.filters.CertificateRenderFilter" not in render_pipeline["pipeline"]:
+        render_pipeline["pipeline"].append("openedx_pok_webhook.filters.CertificateRenderFilter")
+        logger.info("[POK] Added CertificateRenderFilter to render.started.v1 pipeline")
+
+    settings.OPEN_EDX_FILTERS_CONFIG[render_filter_key] = render_pipeline
+
+    # ----------------------------
+    # Certificate Created Filter
+    # ----------------------------
+    created_filter_key = "org.openedx.learning.certificate.creation.requested.v1"
+    created_pipeline = settings.OPEN_EDX_FILTERS_CONFIG.get(created_filter_key, {
+        "fail_silently": False,
+        "pipeline": []
+    })
+
+    if "openedx_pok_webhook.filters.CertificateCreatedFilter" not in created_pipeline["pipeline"]:
+        created_pipeline["pipeline"].append("openedx_pok_webhook.filters.CertificateCreatedFilter")
+        logger.info("[POK] Added CertificateCreatedFilter to creation.requested.v1 pipeline")
+
+    settings.OPEN_EDX_FILTERS_CONFIG[created_filter_key] = created_pipeline
+
+    logger.info("[POK] Plugin filters configured successfully.")

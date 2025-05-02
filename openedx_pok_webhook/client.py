@@ -44,43 +44,31 @@ class PokApiClient:
         if is_preview:
             headers['Content-Type'] = 'application/json'  # Requerido por /template-preview
         return headers
-        
-    def _build_preview_payload(self, user, course_key, grade, mode, platform, signatory_name, organization, course_title):
+    
+    def _get_active_custom_parameters(self):
         """
-        Build a valid payload for the POK /template/preview endpoint.
+        Devuelve un diccionario con los parámetros personalizados activos de la plantilla POK.
+        Ejemplo: {'grade': '23978c77-...', 'signatory': '9ea35e3e-...'}
         """
-        if hasattr(user, 'pii'):
-            first_name, last_name = split_name(user.pii.name)
-        else:
-            first_name = user.first_name
-            last_name = user.last_name
-            
-        logger.error(f"signatory_name--------------------------------------, {signatory_name}")
+        try:
+            endpoint = urljoin(self.base_url, f'template/{self.template}')
+            response = requests.get(endpoint, headers=self._get_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
 
-        return {
-            "credential": {
-                "emissionType": self.emission_type,
-                "dateFormat": "dd/MM/yyyy",
-                "emissionDate": datetime.now().isoformat(),
-                "title": course_title,
-                "emitter": platform
-            },
-            "receiver": {
-                "languageTag": "es-ES",  # Puedes hacer esto dinámico si es necesario
-                "firstName": first_name,
-                "lastName": last_name
-            },
-            "customization": {
-                "template": {
-                    "customParameters": {
-                        "grade": grade,
-                        "signatory": signatory_name
-                    },
-                    "id": self.template
-                }
+            custom_parameters = data.get("customParameters", [])
+            active_params = {
+                param["label"]: param["id"]
+                for param in custom_parameters
+                if param.get("label") and param.get("id")
             }
-        }
 
+            logger.info(f"[POK] Active custom parameters for template {self.template}: {json.dumps(active_params, indent=2)}")
+            return active_params
+
+        except Exception as e:
+            logger.warning(f"[POK] Could not fetch active template attributes: {str(e)}")
+            return {}
 
     def get_organization_details(self):
         """
@@ -130,16 +118,7 @@ class PokApiClient:
                 'error': str(e)
             }
 
-    def request_certificate(self,
-                        user,
-                        course_key,
-                        grade,
-                        mode,
-                        platform,
-                        signatory_name,
-                        organization,
-                        course_title
-                        ):
+    def request_certificate(self, user, course_key, mode, platform, organization, course_title, grade=None, signatory_name=None):
         endpoint = urljoin(self.base_url, 'credential/')
         email = user.pii.email if hasattr(user, 'pii') else user.email
 
@@ -149,6 +128,15 @@ class PokApiClient:
             first_name = user.first_name
             last_name = user.last_name
 
+        active_params = self._get_active_custom_parameters()
+        logger.debug(f"[POK] Active template custom parameters: {active_params}")  # 👈 Log parámetros activos
+
+        custom_params = {}
+        if "grade" in active_params and grade:
+            custom_params["grade"] = grade
+        if "signatory" in active_params and signatory_name:
+            custom_params["signatory"] = signatory_name
+
         payload = {
             "credential": {
                 "tags": [
@@ -157,11 +145,11 @@ class PokApiClient:
                     f"Mode:{mode}"
                 ],
                 "skipAcceptance": True,
-                "emissionType": "pok",
+                "emissionType": self.emission_type,
                 "dateFormat": "dd/MM/yyyy",
                 "emissionDate": datetime.now().isoformat(),
                 "title": course_title,
-                "emitter": platform
+                "emitter": organization
             },
             "receiver": {
                 "languageTag": "es-ES",
@@ -172,19 +160,16 @@ class PokApiClient:
             },
             "customization": {
                 "template": {
-                    "customParameters": {
-                        "grade": grade,
-                        "signatory": signatory_name
-                    },
-                    "id": self.template,
+                    "customParameters": custom_params,
+                    "id": self.template
                 }
             }
         }
 
+        logger.debug(f"[POK] Final payload sent to API: {json.dumps(payload, indent=2)}")  # 👈 Log payload final
+
         try:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
-            logger.debug(f"POK API request payload: {json.dumps(payload)}")
-
             response = requests.post(endpoint, json=payload, headers=self._get_headers())
 
             if response.status_code != 200:
@@ -202,60 +187,9 @@ class PokApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Error requesting certificate from POK: {str(e)}")
             return {'success': False, 'error': str(e)}
-
         except Exception as e:
             logger.exception(f"Unexpected error in POK API client: {str(e)}")
             return {'success': False, 'error': str(e)}
-        
-    def get_template_preview(self, user, course_key, grade, mode, platform, signatory_name, organization, course_title):
-        """
-        Get a preview image of a certificate template using the correct minimal payload.
-        """
-        endpoint = urljoin(self.base_url, "template/preview")
-        payload = self._build_preview_payload(user, course_key, grade, mode, platform, signatory_name, organization, course_title)
-
-        try:
-            logger.info(f"Requesting certificate template preview for user {user.id}")
-            logger.debug(f"POK template preview endpoint: {endpoint}")
-            logger.debug(f"POK template preview payload: {json.dumps(payload, indent=2)}")
-
-            response = requests.post(
-                endpoint,
-                json=payload,
-                headers=self._get_headers(is_preview=True),
-                timeout=self.timeout
-            )
-            response.raise_for_status()
-
-            data = response.json()
-            logger.info(f"POK preview raw response: {json.dumps(data, indent=2)}")
-
-            # Intentar extraer automáticamente el campo de la URL
-            preview_url = (
-                data.get("previewUrl") or
-                data.get("preview_url") or
-                data.get("url") or
-                data.get("location")
-            )
-
-            return {
-                "success": True,
-                "preview": data,
-                "preview_url": preview_url  # 👈 Devuelve también la URL directamente si se pudo extraer
-            }
-
-        except requests.exceptions.HTTPError as e:
-            response = e.response
-            logger.error(
-                f"POK preview HTTP error: {response.status_code} - {response.reason} | Response body: {response.text}"
-            )
-            return {"success": False, "error": f"{response.status_code}: {response.text}"}
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching template preview: {str(e)}")
-            return {"success": False, "error": str(e)}
-
-
 
 
     def get_credential_details(self, certificate_id, decrypted=None):
@@ -316,3 +250,82 @@ class PokApiClient:
                 'success': False,
                 'error': str(e)
             }
+
+
+    def get_template_preview(self, user, signatory_name, organization, course_title, grade):
+        """
+        Get a preview image of a certificate template using the correct minimal payload.
+        """
+        endpoint = urljoin(self.base_url, "template/preview")
+
+        if hasattr(user, 'pii'):
+            first_name, last_name = split_name(user.pii.name)
+        else:
+            first_name = user.first_name
+            last_name = user.last_name
+
+        active_params = self._get_active_custom_parameters()
+        custom_params = {}
+        if "grade" in active_params and grade:
+            custom_params[active_params["grade"]] = grade
+        if "signatory" in active_params and signatory_name:
+            custom_params[active_params["signatory"]] = signatory_name
+
+        payload = {
+            "credential": {
+                "emissionType": self.emission_type,
+                "dateFormat": "dd/MM/yyyy",
+                "emissionDate": datetime.now().isoformat(),
+                "title": course_title,
+                "emitter": organization
+            },
+            "receiver": {
+                "languageTag": "es-ES",
+                "firstName": first_name,
+                "lastName": last_name
+            },
+            "customization": {
+                "template": {
+                    "customParameters": custom_params,
+                    "id": self.template
+                }
+            }
+        }
+
+        try:
+            logger.info(f"Requesting certificate template preview for user {user.id}")
+            logger.debug(f"POK template preview endpoint: {endpoint}")
+            logger.debug(f"POK template preview payload: {json.dumps(payload, indent=2)}")
+
+            response = requests.post(
+                endpoint,
+                json=payload,
+                headers=self._get_headers(is_preview=True),
+                timeout=self.timeout
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            logger.info(f"POK preview raw response: {json.dumps(data, indent=2)}")
+
+            preview_url = (
+                data.get("previewUrl") or
+                data.get("preview_url") or
+                data.get("url") or
+                data.get("location")
+            )
+
+            return {
+                "success": True,
+                "preview": data,
+                "preview_url": preview_url
+            }
+
+        except requests.exceptions.HTTPError as e:
+            response = e.response
+            logger.error(f"POK preview HTTP error: {response.status_code} - {response.reason} | Response body: {response.text}")
+            return {"success": False, "error": f"{response.status_code}: {response.text}"}
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching template preview: {str(e)}")
+            return {"success": False, "error": str(e)}

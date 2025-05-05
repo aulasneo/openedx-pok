@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('openedx_pok_webhook', '0004_rename_course_id_coursetemplate_course'),
+        ('openedx_pok', '0004_rename_course_id_coursetemplate_course'),
     ]
 
     operations = [

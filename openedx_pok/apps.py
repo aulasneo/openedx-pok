@@ -7,7 +7,7 @@ from edx_django_utils.plugins.constants import PluginURLs, PluginSettings
 # ]
 
 class OpenedxPokWebhookConfig(AppConfig):
-    name = 'openedx_pok_webhook'
+    name = 'openedx_pok'
     verbose_name = "POK"
 
     plugin_app = {

@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Common settings for openedx_pok_webhook.
+Common settings for openedx_pok.
 """
 import logging
 
@@ -18,7 +18,7 @@ def plugin_settings(settings):
     settings.POK_API_KEY = ""
 
     # Log inicio de configuración
-    logger.info("[POK] Applying plugin_settings for openedx_pok_webhook...")
+    logger.info("[POK] Applying plugin_settings for openedx_pok...")
 
     # Ensure OPEN_EDX_FILTERS_CONFIG exists
     if not hasattr(settings, "OPEN_EDX_FILTERS_CONFIG"):
@@ -33,8 +33,8 @@ def plugin_settings(settings):
         "pipeline": []
     })
 
-    if "openedx_pok_webhook.filters.CertificateRenderFilter" not in render_pipeline["pipeline"]:
-        render_pipeline["pipeline"].append("openedx_pok_webhook.filters.CertificateRenderFilter")
+    if "openedx_pok.filters.CertificateRenderFilter" not in render_pipeline["pipeline"]:
+        render_pipeline["pipeline"].append("openedx_pok.filters.CertificateRenderFilter")
         logger.info("[POK] Added CertificateRenderFilter to render.started.v1 pipeline")
 
     settings.OPEN_EDX_FILTERS_CONFIG[render_filter_key] = render_pipeline
@@ -48,8 +48,8 @@ def plugin_settings(settings):
         "pipeline": []
     })
 
-    if "openedx_pok_webhook.filters.CertificateCreatedFilter" not in created_pipeline["pipeline"]:
-        created_pipeline["pipeline"].append("openedx_pok_webhook.filters.CertificateCreatedFilter")
+    if "openedx_pok.filters.CertificateCreatedFilter" not in created_pipeline["pipeline"]:
+        created_pipeline["pipeline"].append("openedx_pok.filters.CertificateCreatedFilter")
         logger.info("[POK] Added CertificateCreatedFilter to creation.requested.v1 pipeline")
 
     settings.OPEN_EDX_FILTERS_CONFIG[created_filter_key] = created_pipeline

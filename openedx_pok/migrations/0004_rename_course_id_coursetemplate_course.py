@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('openedx_pok_webhook', '0003_certificatepokapi_custom_parameters_and_more'),
+        ('openedx_pok', '0003_certificatepokapi_custom_parameters_and_more'),
     ]
 
     operations = [

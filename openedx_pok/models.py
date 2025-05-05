@@ -1,5 +1,5 @@
 """
-Database models for openedx_pok_webhook.
+Database models for openedx_pok.
 """
 
 from django.db import models
@@ -57,7 +57,7 @@ class PokCertificate(TimeStampedModel):
         help_text="Custom parameters associated with the certificate",
         blank=True,
         null=True,)
-    
+
     title = models.CharField(
         max_length=255,
         help_text="Title of the POK certificate",
@@ -112,7 +112,7 @@ class CertificateTemplate(TimeStampedModel):
         blank=False,
         null=False
     )
-    
+
     emission_type = models.CharField(
         max_length=50,
         help_text="Type of emission (blockchain or pok)",
@@ -124,7 +124,7 @@ class CertificateTemplate(TimeStampedModel):
             ('blockchain', 'Blockchain')
         ]
     )
-    
+
 
     def __str__(self):
         """

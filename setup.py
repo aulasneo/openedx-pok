@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Package metadata for openedx_pok_webhook.
+Package metadata for openedx_pok.
 """
 import os
 import re
@@ -117,7 +117,7 @@ def is_requirement(line):
     return line and line.strip() and not line.startswith(("-r", "#", "-e", "git+", "-c"))
 
 
-VERSION = get_version('openedx_pok_webhook', '__init__.py')
+VERSION = get_version('openedx_pok', '__init__.py')
 
 if sys.argv[-1] == 'tag':
     print("Tagging the version on github:")
@@ -159,10 +159,10 @@ setup(
 
     entry_points={
         "lms.djangoapp": [
-            "openedx_pok_webhook = openedx_pok_webhook.apps:OpenedxPokWebhookConfig",
+            "openedx_pok = openedx_pok.apps:OpenedxPokWebhookConfig",
         ],
         "cms.djangoapp": [
-            "openedx_pok_webhook = openedx_pok_webhook.apps:OpenedxPokWebhookConfig",
+            "openedx_pok = openedx_pok.apps:OpenedxPokWebhookConfig",
         ],
     },
 )

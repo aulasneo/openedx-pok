@@ -72,7 +72,7 @@ class CertificateCreatedFilter(PipelineStep):
 
                 if response.get("success"):
                     data = response["content"]
-                    
+
                     pok_certificate.pok_certificate_id = data.get("id")
                     pok_certificate.state = data.get("state")
                     pok_certificate.view_url = data.get("viewUrl")
@@ -129,7 +129,7 @@ class CertificateRenderFilter(PipelineStep):
         logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
         pok_client = PokApiClient(course_id)
-        
+
         if not pok_client.api_key:
             logger.warning("POK API key is not set. Skipping POK certificate rendering.")
             return {"context": context, "custom_template": custom_template}
@@ -183,7 +183,7 @@ class CertificateRenderFilter(PipelineStep):
                 if not image_content:
                     raise Exception("POK response missing 'location' for decrypted image.")
 
-                html_content = render_to_string("openedx_pok_webhook/certificate_pok.html", {
+                html_content = render_to_string("openedx_pok/certificate_pok.html", {
                     'document_title': context.get('document_title', 'Certificate'),
                     'logo_src': context.get('logo_src', ''),
                     'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
@@ -194,7 +194,7 @@ class CertificateRenderFilter(PipelineStep):
             except Exception as e:
                 logger.error(f"Failed to render emitted certificate from POK: {str(e)}")
 
-                html_content = render_to_string("openedx_pok_webhook/certificate_error.html", {
+                html_content = render_to_string("openedx_pok/certificate_error.html", {
                     'document_title': context.get('document_title', 'Error'),
                     'error_message': "We couldn't render your certificate at this time. Please try again later.",
                     'course_id': course_id,
@@ -214,12 +214,12 @@ class CertificateRenderFilter(PipelineStep):
 
 
         elif state == "processing":
-            html_content = render_to_string("openedx_pok_webhook/certificate_processing.html", {
+            html_content = render_to_string("openedx_pok/certificate_processing.html", {
                 'document_title': context.get('document_title', 'Certificate in process'),
                 'course_id': course_id,
                 'user_id': user_id,
             })
-            
+
         elif state == "preview":
             # ------------------------------------------------------------------------
             # PREVIEW MODE: This is triggered from the CMS (Instructor Preview).
@@ -268,7 +268,7 @@ class CertificateRenderFilter(PipelineStep):
                 return {"context": context, "custom_template": custom_template}
 
         else:
-            html_content = render_to_string("openedx_pok_webhook/certificate_error.html", {
+            html_content = render_to_string("openedx_pok/certificate_error.html", {
                 'document_title': context.get('document_title', 'Error'),
                 'error_message': f"The current state is '{state}'. Please try again later.",
                 'course_id': course_id,

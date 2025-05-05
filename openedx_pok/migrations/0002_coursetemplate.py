@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('course_overviews', '0029_alter_historicalcourseoverview_options'),
-        ('openedx_pok_webhook', '0001_initial'),
+        ('openedx_pok', '0001_initial'),
     ]
 
     operations = [

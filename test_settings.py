@@ -32,14 +32,14 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
-    'openedx_pok_webhook',
+    'openedx_pok',
 )
 
 LOCALE_PATHS = [
-    root('openedx_pok_webhook', 'conf', 'locale'),
+    root('openedx_pok', 'conf', 'locale'),
 ]
 
-ROOT_URLCONF = 'openedx_pok_webhook.urls'
+ROOT_URLCONF = 'openedx_pok.urls'
 
 SECRET_KEY = 'insecure-secret-key'
 

@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('course_overviews', '0029_alter_historicalcourseoverview_options'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('openedx_pok_webhook', '0008_alter_coursetemplate_emission_type'),
+        ('openedx_pok', '0008_alter_coursetemplate_emission_type'),
     ]
 
     operations = [

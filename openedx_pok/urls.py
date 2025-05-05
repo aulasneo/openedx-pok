@@ -1,5 +1,5 @@
 """
-URLs for openedx_pok_webhook.
+URLs for openedx_pok.
 """
 from django.urls import re_path  # pylint: disable=unused-import
 from django.views.generic import TemplateView  # pylint: disable=unused-import

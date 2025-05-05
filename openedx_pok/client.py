@@ -9,9 +9,9 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
-from openedx_pok_webhook.models import CertificateTemplate
+from openedx_pok.models import CertificateTemplate
 
-from openedx_pok_webhook.utils import split_name
+from openedx_pok.utils import split_name
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class PokApiClient:
         self.api_key =  settings.POK_API_KEY
         self.template = template.template_id if template else settings.POK_TEMPLATE_ID
         self.emission_type = template.emission_type if template else "pok"
-        
+
         self.base_url = settings.POK_API_URL
         self.timeout = settings.POK_TIMEOUT
 
@@ -44,7 +44,7 @@ class PokApiClient:
         if is_preview:
             headers['Content-Type'] = 'application/json'  # Requerido por /template-preview
         return headers
-    
+
     def _get_active_custom_parameters(self):
         """
         Devuelve un diccionario con los parámetros personalizados activos de la plantilla POK.

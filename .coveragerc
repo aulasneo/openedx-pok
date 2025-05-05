@@ -1,7 +1,7 @@
 [run]
 branch = True
 data_file = .coverage
-source=openedx_pok_webhook
+source=openedx_pok
 omit =
     test_settings.py
     */migrations/*

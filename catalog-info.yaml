@@ -4,8 +4,8 @@
 apiVersion: backstage.io/v1alpha1
 kind: ""
 metadata:
-  name: 'openedx-pok-webhook'
-  description: "A Django extension for Open edX that provides a webhook API for integration with external systems. This application facilitates real-time communication between the Open edX platform and third-party services, enabling automatic notifications when specific events occur in the LMS, such as completing a course, submitting an assignment, or passing an assessment. It includes JWT authentication, signature handling for verifying requests, retry capabilities for failed webhooks, and an admin dashboard for monitoring the status of sent notifications."
+  name: 'openedx-pok'
+  description: "A Django extension for Open edX that provides integration with POK certificates."
   annotations:
     # The openedx.org/release key is described in OEP-10:
     #   https://open-edx-proposals.readthedocs.io/en/latest/oep-0010-proc-openedx-releases.html

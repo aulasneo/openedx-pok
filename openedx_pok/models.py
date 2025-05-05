@@ -107,7 +107,8 @@ class CertificateTemplate(TimeStampedModel):
         on_delete=models.CASCADE,
         help_text="Course ID associated with the template",
     )
-    template_id = models.TextField(
+    template_id = models.CharField(
+        max_length=250,
         help_text="Template ID associated with the course",
         blank=False,
         null=False

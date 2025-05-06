@@ -1,61 +1,86 @@
 """
-These settings are here to use during tests, because django requires them.
-
-In a real-world use case, apps in this project are installed into other
-Django applications, so these settings will not be used.
+Settings for testing the openedx_pok app.
 """
 
-from os.path import abspath, dirname, join
+import warnings
+from django.core.cache import CacheKeyWarning
+from django.utils.crypto import get_random_string
 
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
-def root(*args):
-    """
-    Get the absolute path of the given path relative to the project root.
-    """
-    return join(abspath(dirname(__file__)), *args)
-
+SECRET_KEY = get_random_string(50, 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'default.db',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
-    }
+        'NAME': 'openedx_pok_test_db',
+        'TEST': {
+            'NAME': 'openedx_pok_test_db',
+        }
+    },
+    'read_replica': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'openedx_pok_read_replica_db',
+        'TEST': {
+            'MIRROR': 'default',
+        },
+    },
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'default_loc_mem',
+    },
+}
+
+ROOT_URLCONF = 'openedx_pok.urls'
+SITE_ID = 1
+USE_TZ = True
+
+# Silence cache key warnings
+warnings.simplefilter("ignore", CacheKeyWarning)
+
 INSTALLED_APPS = (
-    'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.messages',
+    'django.contrib.contenttypes',  # Asegúrate de que esta línea esté presente
     'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    #'openedx.core.djangoapps.content.course_overviews',
+    #'lms.djangoapps.courseware',
+
+    'model_utils',      # Necesario por TimeStampedModel
     'openedx_pok',
 )
 
-LOCALE_PATHS = [
-    root('openedx_pok', 'conf', 'locale'),
-]
-
-ROOT_URLCONF = 'openedx_pok.urls'
-
-SECRET_KEY = 'insecure-secret-key'
-
 MIDDLEWARE = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
 )
 
-TEMPLATES = [{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'APP_DIRS': False,
-    'OPTIONS': {
-        'context_processors': [
-            'django.contrib.auth.context_processors.auth',  # this is required for admin
-            'django.contrib.messages.context_processors.messages',  # this is required for admin
-        ],
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
     },
-}]
+]
+
+FEATURES = {
+    'ENABLE_CSMH_EXTENDED': False,
+}
+
+TEST_APPS = ('openedx_pok',)

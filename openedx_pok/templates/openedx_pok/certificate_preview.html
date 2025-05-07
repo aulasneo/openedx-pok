@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ document_title|default:"Certificate Preview" }}</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #f8f9fa;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    body.page-transition {
+      transform: translateX(100vw);
+      transition: transform 0.8s ease-in-out;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: #007bff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 10;
+    }
+
+    .top-bar img.logo {
+      height: 30px;
+    }
+
+    .back-button {
+      background-color: #ffffff;
+      color: #007bff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .back-button:hover {
+      background-color: #f0f0f0;
+    }
+
+    .image-container {
+      position: absolute;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .image-container img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <img src="{{ logo_src }}" alt="Logo" class="logo">
+    <button id="goBackBtn" class="back-button">Volver</button>
+  </div>
+
+  <div class="image-container">
+    <img src="{{ preview_url }}" alt="Certificate Preview">
+  </div>
+
+  <script>
+    document.getElementById('goBackBtn').addEventListener('click', () => {
+      document.body.classList.add('page-transition');
+      setTimeout(() => {
+        window.location.href = "{{ learning_microfrontend_url }}";
+      }, 800);
+    });
+  </script>
+</body>
+</html>

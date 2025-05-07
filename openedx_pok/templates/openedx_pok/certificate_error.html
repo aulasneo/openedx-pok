@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ document_title|default:"Certificate Error" }}</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e9d5d5 100%);
@@ -14,7 +20,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 0.8s ease-in-out;
         }
+
+        body.page-transition {
+            transform: translateX(100vw);
+        }
+
         .container {
             background-color: white;
             border-radius: 15px;
@@ -25,22 +37,26 @@
             text-align: center;
             border-top: 4px solid #e63946;
         }
+
         h1 {
             color: #e63946;
             margin-bottom: 20px;
             font-size: 28px;
         }
+
         p {
             color: #555;
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 15px;
         }
+
         .icon {
             color: #e63946;
             font-size: 40px;
             margin-bottom: 20px;
         }
+
         .btn {
             display: inline-block;
             background-color: #e63946;
@@ -51,7 +67,9 @@
             font-weight: bold;
             margin-top: 20px;
             transition: background-color 0.3s;
+            cursor: pointer;
         }
+
         .btn:hover {
             background-color: #d62b39;
         }
@@ -66,7 +84,17 @@
         <h1>Something went wrong</h1>
         <p>{{ error_message|default:"We were unable to display your certificate at this time." }}</p>
         <p>Please try again later or contact support if the problem persists.</p>
-        <a href="javascript:history.back()" class="btn">Go Back</a>
+        <button class="btn" id="goBackBtn">Go Back</button>
     </div>
+
+    <script>
+        const button = document.getElementById('goBackBtn');
+        button.addEventListener('click', () => {
+            document.body.classList.add('page-transition');
+            setTimeout(() => {
+                window.location.href = "{{ learning_microfrontend_url }}";
+            }, 800);
+        });
+    </script>
 </body>
 </html>

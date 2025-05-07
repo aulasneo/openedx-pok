@@ -1,14 +1,47 @@
 {% extends "openedx_pok/base_pok.html" %}
 
 {% block content %}
-<!-- Logo -->
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body.page-transition {
+      transform: translateX(100vw);
+      transition: transform 0.8s ease-in-out;
+    }
+
+    .boton-superior {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+</style>
+
 <section>
     <a href="{% url 'dashboard' %}">
         <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
     </a>
 </section>
 
-<!-- Banner de felicitación -->
 <section class="banner">
     <p>{{ accomplishment_copy_name }}, you earned a certificate!</p>
     <p>Congratulations! This page summarizes what you accomplished.</p>
@@ -19,17 +52,17 @@
     </a>
 </section>
 
-<!-- Título -->
 <section>
     <h2>My Open edX acknowledges the following student accomplishment</h2>
 </section>
 
-<!-- Certificado -->
 <section class="certificate-section">
-    <img src="{{ image_content }}" alt="Certificate">
+    <div id="pagina2" class="pagina">
+        <button id="botonToggle" class="boton-superior">Volver</button>
+        <img src="{{ image_content }}" alt="Certificate">
+    </div>
 </section>
 
-<!-- Información adicional -->
 <section>
     <h3>More about {{ accomplishment_copy_name }}'s accomplishment</h3>
 
@@ -45,4 +78,17 @@
         </div>
     </div>
 </section>
+
+<script>
+    const boton = document.getElementById('botonToggle');
+
+    boton.addEventListener('click', () => {
+        document.body.classList.add('page-transition');
+
+        // Espera a que termine la animación antes de redirigir (800ms)
+        setTimeout(() => {
+            window.location.href = "{{ learning_microfrontend_url }}";
+        }, 800);
+    });
+</script>
 {% endblock %}

@@ -1,3 +1,4 @@
+""
 """
 POK certificate filter implementations.
 """
@@ -18,6 +19,7 @@ from openedx.core.lib.courses import get_course_by_id
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
 class CertificateCreatedFilter(PipelineStep):
     """
     Filter to handle the creation of POK certificates when a certificate is issued.
@@ -44,7 +46,7 @@ class CertificateCreatedFilter(PipelineStep):
             course_instance = get_course_by_id(course_key)
             course_cert_data = course_instance.certificates.get("certificates")[0]
             course_title = course_cert_data.get("course_title")
-            
+
             if not course_title:
                 course_title = getattr(course_instance, "display_name", "")
                 logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
@@ -53,6 +55,8 @@ class CertificateCreatedFilter(PipelineStep):
             signatory_name = signatory.get("name", "Instructor")
             organization = signatory.get("organization", "Organization")
             platform = getattr(settings, 'PLATFORM_NAME', "OpenedX")
+
+            user_name = getattr(user.profile, "name")
 
             pok_certificate, _ = PokCertificate.objects.get_or_create(
                 user_id=user.id,
@@ -85,7 +89,7 @@ class CertificateCreatedFilter(PipelineStep):
                     pok_certificate.emitter = data.get("credential", {}).get("emitter")
                     pok_certificate.tags = data.get("credential", {}).get("tags", [])
                     pok_certificate.receiver_email = data.get("receiver", {}).get("email")
-                    pok_certificate.receiver_name = data.get("receiver", {}).get("name")
+                    pok_certificate.receiver_name = user_name
                     pok_certificate.save()
 
                     logger.info(f"[POK] Certificate created and stored for user={user.id}, course={course_id_str}")
@@ -104,6 +108,7 @@ class CertificateCreatedFilter(PipelineStep):
 
         return kwargs
 
+
 class CertificateRenderFilter(PipelineStep):
     """
     Process CertificateRenderStarted filter to redirect to POK certificate.
@@ -113,13 +118,6 @@ class CertificateRenderFilter(PipelineStep):
     """
 
     def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
-        """
-        Execute the filter.
-
-        Arguments:
-            context (dict): context dictionary for certificate template.
-            custom_template (CertificateTemplate): edxapp object representing custom web certificate template.
-        """
         user_id = context.get('accomplishment_user_id')
         course_id = context.get('course_id')
         if not user_id or not course_id:
@@ -133,40 +131,27 @@ class CertificateRenderFilter(PipelineStep):
             return {"context": context, "custom_template": custom_template}
 
         try:
-            # Intenta obtener el certificado emitido
             certificate = PokCertificate.objects.get(
                 user_id=user_id,
                 course_id=course_id,
                 state="emitted"
             )
             state = "emitted"
-            logger.info("Found emitted POK certificate.")
-
         except PokCertificate.DoesNotExist:
             try:
-                # Si no hay emitido, intenta obtener uno en procesamiento
                 certificate = PokCertificate.objects.get(
                     user_id=user_id,
                     course_id=course_id,
                     state="processing"
                 )
-                logger.info("Found processing POK certificate.")
-
                 pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
                 content = pok_response.get("content", {})
                 state = content.get("state", "processing")
                 certificate.state = state
                 certificate.save()
-                logger.info(f"Updated processing certificate state to: {state}")
-
             except PokCertificate.DoesNotExist:
-                # Si no hay ninguno, el estado es preview
                 certificate = None
                 state = "preview"
-                logger.info("No existing POK certificate found. Using preview state.")
-
-
-        logger.info(f"Certificate state from POK API: {state}")
 
         if state == "emitted":
             try:
@@ -187,29 +172,25 @@ class CertificateRenderFilter(PipelineStep):
                     'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
                     'image_content': image_content,
                     'certificate_url': certificate.view_url,
+                    'learning_microfrontend_url': f"{settings.LEARNING_MICROFRONTEND_URL}/course/{course_id}/progress"
                 })
 
             except Exception as e:
                 logger.error(f"Failed to render emitted certificate from POK: {str(e)}")
-
                 html_content = render_to_string("openedx_pok/certificate_error.html", {
                     'document_title': context.get('document_title', 'Error'),
                     'error_message': "We couldn't render your certificate at this time. Please try again later.",
                     'course_id': course_id,
                     'user_id': user_id,
                 })
-
-                http_response = HttpResponse(
-                    content=html_content,
-                    content_type="text/html; charset=utf-8",
-                    status=500
-                )
-
                 raise CertificateRenderStarted.RenderCustomResponse(
                     message="Error rendering POK certificate",
-                    response=http_response
+                    response=HttpResponse(
+                        content=html_content,
+                        content_type="text/html; charset=utf-8",
+                        status=500
+                    )
                 )
-
 
         elif state == "processing":
             html_content = render_to_string("openedx_pok/certificate_processing.html", {
@@ -219,24 +200,13 @@ class CertificateRenderFilter(PipelineStep):
             })
 
         elif state == "preview":
-            # ------------------------------------------------------------------------
-            # PREVIEW MODE: This is triggered from the CMS (Instructor Preview).
-            # In this mode we simulate what the certificate will look like
-            # without requiring a generated certificate.
-            # ------------------------------------------------------------------------
-            logger.info("POK certificate in 'preview' state detected. Attempting to generate preview URL.")
-
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            user_id = context.get("accomplishment_user_id")
-
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 logger.warning(f"User with id={user_id} not found in database.")
                 return {"context": context, "custom_template": custom_template}
-
-            logger.info(f"Building preview payload for user_id={user.id}, course_id={course_id}")
 
             preview_response = pok_client.get_template_preview(
                 user=user,
@@ -247,23 +217,28 @@ class CertificateRenderFilter(PipelineStep):
             )
 
             if preview_response.get("success"):
-                logger.info("POK preview request succeeded.")
-
                 preview_url = preview_response.get("preview_url")
-
                 if not preview_url:
                     logger.error(f"POK preview URL not found in response: {json.dumps(preview_response, indent=2)}")
                     return {"context": context, "custom_template": custom_template}
 
-                logger.info(f"Redirecting to POK certificate preview URL: {preview_url}")
-                raise CertificateRenderStarted.RenderCustomResponse(
-                    message="Redirecting to certificate preview",
-                    response=HttpResponseRedirect(preview_url)
-                )
+                html_content = render_to_string("openedx_pok/certificate_preview.html", {
+                    'document_title': "Certificate Preview",
+                    'preview_url': preview_url,
+                    'user_id': user_id,
+                    'course_id': course_id,
+                    'logo_src': context.get('logo_src', ''),
+                    'learning_microfrontend_url': f"{settings.LEARNING_MICROFRONTEND_URL}/course/{course_id}/progress",
+                })
 
+                raise CertificateRenderStarted.RenderCustomResponse(
+                    message="Rendering certificate preview",
+                    response=HttpResponse(html_content)
+                )
             else:
                 logger.error(f"POK preview request failed: {preview_response.get('error')}")
                 return {"context": context, "custom_template": custom_template}
+
 
         else:
             html_content = render_to_string("openedx_pok/certificate_error.html", {
@@ -271,15 +246,14 @@ class CertificateRenderFilter(PipelineStep):
                 'error_message': f"The current state is '{state}'. Please try again later.",
                 'course_id': course_id,
                 'user_id': user_id,
+                'learning_microfrontend_url': f"{settings.LEARNING_MICROFRONTEND_URL}/course/{course_id}/progress",
             })
-
-        http_response = HttpResponse(
-            content=html_content,
-            content_type="text/html; charset=utf-8",
-            status=200
-        )
 
         raise CertificateRenderStarted.RenderCustomResponse(
             message=f"Rendering certificate page (state={state})",
-            response=http_response
-    )
+            response=HttpResponse(
+                content=html_content,
+                content_type="text/html; charset=utf-8",
+                status=200
+            )
+        )

@@ -24,7 +24,6 @@ class CertificateCreatedFilter(PipelineStep):
     """
 
     def run_filter(self, **kwargs):
-        # 🔍 Log completo del contexto
         logger.info(f"[POK] CertificateCreatedFilter kwargs context: {json.dumps({k: str(v) for k, v in kwargs.items()}, indent=2)}")
 
         user = kwargs.get("user")
@@ -42,10 +41,14 @@ class CertificateCreatedFilter(PipelineStep):
 
         try:
             logger.info(f"[POK] Triggered CertificateCreatedFilter for user={user.id}, course={course_id_str}")
-
             course_instance = get_course_by_id(course_key)
             course_cert_data = course_instance.certificates.get("certificates")[0]
-            course_title = course_cert_data.get("course_title", "Course")
+            course_title = course_cert_data.get("course_title")
+            
+            if not course_title:
+                course_title = getattr(course_instance, "display_name", "")
+                logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
+
             signatory = course_cert_data.get("signatories", [{}])[0]
             signatory_name = signatory.get("name", "Instructor")
             organization = signatory.get("organization", "Organization")
@@ -101,9 +104,6 @@ class CertificateCreatedFilter(PipelineStep):
 
         return kwargs
 
-
-
-
 class CertificateRenderFilter(PipelineStep):
     """
     Process CertificateRenderStarted filter to redirect to POK certificate.
@@ -125,8 +125,6 @@ class CertificateRenderFilter(PipelineStep):
         if not user_id or not course_id:
             logger.warning("Missing user_id or course_id in certificate render context")
             return {"context": context, "custom_template": custom_template}
-
-        logger.info(f"POK Certificate Render Filter: User: {user_id}, Course: {course_id}")
 
         pok_client = PokApiClient(course_id)
 
@@ -244,7 +242,7 @@ class CertificateRenderFilter(PipelineStep):
                 user=user,
                 signatory_name=context.get("certificate_data", {}).get("signatories", [{}])[0].get("name", "Instructor"),
                 organization=context.get("organization_long_name", "Organization"),
-                course_title=context.get("certificate_data", {}).get("course_title", "Course"),
+                course_title=context.get("certificate_data", {}).get("course_title") or context.get("accomplishment_copy_course_name"),
                 grade=context.get("certificate_data", {}).get("description", "N/A"),
             )
 

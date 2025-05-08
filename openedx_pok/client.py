@@ -124,7 +124,7 @@ class PokApiClient:
         first_name, last_name = split_name(user.profile.name)
 
         active_params = self._get_active_custom_parameters()
-        logger.debug(f"[POK] Active template custom parameters: {active_params}")
+        logger.info(f"[POK] Active template custom parameters: {active_params}")
 
         custom_params = {}
         if "grade" in active_params and grade:
@@ -161,7 +161,7 @@ class PokApiClient:
             }
         }
 
-        logger.debug(f"[POK] Final payload sent to API: {json.dumps(payload, indent=2)}")
+        logger.info(f"[POK] Final payload sent to API: {json.dumps(payload, indent=2)}")
 
         try:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
@@ -286,8 +286,8 @@ class PokApiClient:
 
         try:
             logger.info(f"Requesting certificate template preview for user {user.id}")
-            logger.debug(f"POK template preview endpoint: {endpoint}")
-            logger.debug(f"POK template preview payload: {json.dumps(payload, indent=2)}")
+            logger.info(f"POK template preview endpoint: {endpoint}")
+            logger.info(f"POK template preview payload: {json.dumps(payload, indent=2)}")
 
             response = requests.post(
                 endpoint,

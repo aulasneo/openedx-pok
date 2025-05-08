@@ -2,93 +2,209 @@
 
 {% block content %}
 <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body.page-transition {
+    transform: translateX(100vw);
+    transition: transform 0.8s ease-in-out;
+  }
+
+  body {
+    transition: background-color 0.8s ease-in-out;
+    background-color: white;
+    overflow-x: hidden; /* 👈 Evita scroll horizontal */
+  }
+  .header-section {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    z-index: 1000;
+    padding: 20px;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .boton-superior {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+  }
+
+  .center-button {
+    display: flex;
+    justify-content: center;
+    margin: 50px 0;
+  }
+  
+  .printButton {
+    background-color: white;
+    color: var(--primary-color);
+    border: 2px solid white;
+    border-radius: 30px;
+    padding: 10px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 3rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  .certificate-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+  }
+  
+  .certificate-section-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%%;
+    margin: -75px auto;
+    overflow: hidden;
+  }
+
+  .iframe-container,
+  .iframe-container_v2 {
+    width: 100%;
+    max-width: 900px; /* 👈 Limita el ancho máximo */
+    margin: 0 auto;
+  }
+
+  .iframe-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .iframe-container_v2 {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* 👈 evita scroll interno */
+    margin: 0;
+    padding: 0;
     }
 
-    body.page-transition {
-      transform: translateX(100vw);
-      transition: transform 0.8s ease-in-out;
+    iframe {
+    width: 100vw; /* 👈 ocupa el ancho completo del viewport */
+    height: 100vh; /* 👈 ocupa el alto completo */
+    border: none;
+    display: block;
+    margin-top: 30px;
     }
 
-    .boton-superior {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 100;
+    section {
+        padding: 0;
+    }
+    
+
+    footer {
+        display: none;
     }
 
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
 </style>
 
-<section>
-    <a href="{% url 'dashboard' %}">
-        <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
-    </a>
+
+
+<section class="header-section">
+  <button class="boton-superior">Volver</button>
+  <a href="{% url 'dashboard' %}">
+    <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
+  </a>
 </section>
 
-<section class="banner">
-    <p>{{ accomplishment_copy_name }}, you earned a certificate!</p>
-    <p>Congratulations! This page summarizes what you accomplished.</p>
-    <a href="{{ certificate_url }}" target="_blank" rel="noopener noreferrer">
-        <button class="print-button">
-            <i class="fas fa-print"></i> Print Certificate
-        </button>
-    </a>
-</section>
-
-<section>
-    <h2>My Open edX acknowledges the following student accomplishment</h2>
+<section class="center-button">
+  <button id="printButton" class="print-button">
+    <i class="fas fa-print"></i> Certificate Details
+  </button>
 </section>
 
 <section class="certificate-section">
-    <div id="pagina2" class="pagina">
-        <button id="botonToggle" class="boton-superior">Volver</button>
-        <img src="{{ image_content }}" alt="Certificate">
-    </div>
+  <div id="previewFrame" class="iframe-container">
+    <img src="{{ image_content }}" alt="Certificate">
+  </div>
 </section>
 
-<section>
-    <h3>More about {{ accomplishment_copy_name }}'s accomplishment</h3>
-
-    <div class="info-section">
-        <div class="info-column">
-            <h4>About My Open edX</h4>
-            <p>My Open edX offers interactive online classes and MOOCs.</p>
-        </div>
-
-        <div class="info-column">
-            <h4>About My Open edX Accomplishments</h4>
-            <p>My Open edX acknowledges achievements through certificates.</p>
-        </div>
-    </div>
+<section class="certificate-section-v2">
+  <div id="detailsFrame"  style="display: none;">
+    <iframe src="{{ certificate_url }}" width="100%" height="100vh" style="border:none;"></iframe>
+  </div>
 </section>
 
 <script>
-    const boton = document.getElementById('botonToggle');
+  const boton = document.getElementById('botonToggle');
+  const printButton = document.getElementById('printButton');
+  const previewFrame = document.getElementById('previewFrame');
+  const detailsFrame = document.getElementById('detailsFrame');
+
+  // Mostramos resumen por defecto (imagen)
+  let isDetailsShown = false;
+
+  // Asegurar el estado inicial al cargar
+  window.addEventListener('DOMContentLoaded', () => {
+    previewFrame.style.display = 'block';
+    detailsFrame.style.display = 'none';
+    printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
+  });
+
+  localStorage.setItem('lastVisited', window.location.href);
 
     boton.addEventListener('click', () => {
         document.body.classList.add('page-transition');
-
         // Espera a que termine la animación antes de redirigir (800ms)
         setTimeout(() => {
-            window.location.href = "{{ learning_microfrontend_url }}";
+            window.history.go(-1)
         }, 800);
     });
+
+
+  printButton.addEventListener('click', () => {
+    document.body.classList.add('page-transition');
+
+    setTimeout(() => {
+      if (isDetailsShown) {
+        // Volver al resumen
+        previewFrame.style.display = 'block';
+        detailsFrame.style.display = 'none';
+        printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
+      } else {
+        // Mostrar detalles
+        previewFrame.style.display = 'none';
+        detailsFrame.style.display = 'block';
+        printButton.innerHTML = '<i class="fas fa-image"></i> Certificate Summary';
+      }
+
+      document.body.classList.remove('page-transition');
+      isDetailsShown = !isDetailsShown;
+    }, 800);
+  });
 </script>
+
 {% endblock %}

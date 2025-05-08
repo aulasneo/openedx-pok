@@ -120,16 +120,11 @@ class PokApiClient:
 
     def request_certificate(self, user, course_key, mode, platform, organization, course_title, grade=None, signatory_name=None):
         endpoint = urljoin(self.base_url, 'credential/')
-        email = user.pii.email if hasattr(user, 'pii') else user.email
-
-        if hasattr(user, 'pii'):
-            first_name, last_name = split_name(user.pii.name)
-        else:
-            first_name = user.first_name
-            last_name = user.last_name
+        email = user.email
+        first_name, last_name = split_name(user.profile.name)
 
         active_params = self._get_active_custom_parameters()
-        logger.debug(f"[POK] Active template custom parameters: {active_params}")  # 👈 Log parámetros activos
+        logger.debug(f"[POK] Active template custom parameters: {active_params}")
 
         custom_params = {}
         if "grade" in active_params and grade:
@@ -166,7 +161,7 @@ class PokApiClient:
             }
         }
 
-        logger.debug(f"[POK] Final payload sent to API: {json.dumps(payload, indent=2)}")  # 👈 Log payload final
+        logger.debug(f"[POK] Final payload sent to API: {json.dumps(payload, indent=2)}")
 
         try:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
@@ -190,6 +185,7 @@ class PokApiClient:
         except Exception as e:
             logger.exception(f"Unexpected error in POK API client: {str(e)}")
             return {'success': False, 'error': str(e)}
+
 
 
     def get_credential_details(self, certificate_id, decrypted=None):
@@ -258,11 +254,7 @@ class PokApiClient:
         """
         endpoint = urljoin(self.base_url, "template/preview")
 
-        if hasattr(user, 'pii'):
-            first_name, last_name = split_name(user.pii.name)
-        else:
-            first_name = user.first_name
-            last_name = user.last_name
+        first_name, last_name = split_name(user.profile.name)
 
         active_params = self._get_active_custom_parameters()
         custom_params = {}
@@ -329,3 +321,4 @@ class PokApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching template preview: {str(e)}")
             return {"success": False, "error": str(e)}
+

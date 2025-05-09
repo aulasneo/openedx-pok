@@ -170,7 +170,8 @@ class CertificateRenderFilter(PipelineStep):
                     'document_title': context.get('document_title', 'Certificate'),
                     'logo_src': context.get('logo_src', ''),
                     'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
-                    'image_content': image_content
+                    'image_content': image_content,
+                    'certificate_url': certificate.view_url
                 })
 
             except Exception as e:

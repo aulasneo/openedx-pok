@@ -16,85 +16,131 @@
   body {
     transition: background-color 0.8s ease-in-out;
     background-color: white;
-    overflow-x: hidden; /* 👈 Evita scroll horizontal */
+    overflow-x: hidden;
   }
+
   .header-section {
     position: sticky;
     top: 0;
-    left: 0;
     width: 100%;
+    padding: 0;
     background-color: white;
     z-index: 1000;
-    padding: 20px;
-    align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-  .boton-superior {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 100;
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    position: relative;
   }
 
-  .center-button {
-    display: flex;
-    justify-content: center;
-    margin: 50px 0;
+  .logo-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
-  
-  .printButton {
+
+  .logo {
+    height: 30px;
+  }
+
+  .menu {
+    display: flex;
+    gap: 20px;
+    margin-left: auto;
+  }
+
+  .hamburger {
+    font-size: 28px;
+    cursor: pointer;
+    display: none;
+    user-select: none;
+  }
+
+  .print-button,
+  .boton-superior {
     background-color: white;
-    color: var(--primary-color);
+    color: #007bff;
     border: 2px solid white;
-    border-radius: 30px;
+    border-radius: 5px;
     padding: 10px 25px;
     font-size: 16px;
     font-weight: bold;
-    margin-top: 3rem;
     cursor: pointer;
+    margin: 0;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
 
-  button {
-    padding: 12px 24px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
+  .boton-superior:hover,
+  .print-button:hover {
+    background-color: rgb(201, 223, 246);
+    box-shadow: none;
   }
 
-  button:hover {
-    background-color: #0056b3;
+  @media (max-width: 768px) {
+    .header-content {
+      justify-content: space-between;
+    }
+
+    .logo-container {
+      position: static;
+      transform: none;
+    }
+
+    .hamburger {
+      display: block;
+    }
+
+    .menu {
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      background-color: white;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 10px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 999;
+    }
+
+    .menu.show {
+      display: flex;
+    }
+
+    .print-button,
+    .boton-superior {
+      width: 100%;
+      justify-content: flex-end;
+    }
   }
 
-  .certificate-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0 20px;
-  }
-  
+  .certificate-section,
   .certificate-section-v2 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%%;
-    margin: -75px auto;
+    width: 100%;
+    padding: 16px;
+    margin: 0 auto;
+  }
+
+  .certificate-section-v2 {
+    margin-top: -89px;
     overflow: hidden;
   }
 
   .iframe-container,
   .iframe-container_v2 {
     width: 100%;
-    max-width: 900px; /* 👈 Limita el ancho máximo */
+    max-width: 900px;
     margin: 0 auto;
   }
 
@@ -107,43 +153,47 @@
   .iframe-container_v2 {
     width: 100vw;
     height: 100vh;
-    overflow: hidden; /* 👈 evita scroll interno */
+    overflow: hidden;
     margin: 0;
     padding: 0;
-    }
+  }
+  .print-button:hover {
+    transform: none;
+  }
 
-    iframe {
-    width: 100vw; /* 👈 ocupa el ancho completo del viewport */
-    height: 100vh; /* 👈 ocupa el alto completo */
+  iframe {
+    width: 100vw;
+    height: calc(100vh - 77px);
     border: none;
     display: block;
     margin-top: 30px;
-    }
+  }
 
-    section {
-        padding: 0;
-    }
-    
-
-    footer {
-        display: none;
-    }
-
+  footer {
+    display: none;
+  }
 </style>
 
-
-
 <section class="header-section">
-  <button class="boton-superior">Volver</button>
-  <a href="{% url 'dashboard' %}">
-    <img src="{{ logo_src }}" alt="Logo" style="height:30px;">
-  </a>
-</section>
+  <div class="header-content">
+    <!-- Logo: centro en desktop, izquierda en mobile -->
+    <div class="logo-container">
+      <a href="{% url 'dashboard' %}">
+        <img src="{{ logo_src }}" alt="Logo" class="logo">
+      </a>
+    </div>
 
-<section class="center-button">
-  <button id="printButton" class="print-button">
-    <i class="fas fa-print"></i> Certificate Details
-  </button>
+    <!-- Botones: alineados a la derecha en desktop, dentro del menú en mobile -->
+    <div class="menu" id="menu">
+      <button id="printButton" class="print-button">
+        <i class="fas fa-file-alt"></i> Certificate Details
+      </button>
+      <button id="botonToggle" class="boton-superior">Volver</button>
+    </div>
+
+    <!-- Hamburguesa (solo visible en mobile) -->
+    <div class="hamburger" id="hamburger">&#9776;</div>
+  </div>
 </section>
 
 <section class="certificate-section">
@@ -153,8 +203,8 @@
 </section>
 
 <section class="certificate-section-v2">
-  <div id="detailsFrame"  style="display: none;">
-    <iframe src="{{ certificate_url }}" width="100%" height="100vh" style="border:none;"></iframe>
+  <div id="detailsFrame" style="display: none;">
+    <iframe src="{{ certificate_url }}"></iframe>
   </div>
 </section>
 
@@ -163,39 +213,38 @@
   const printButton = document.getElementById('printButton');
   const previewFrame = document.getElementById('previewFrame');
   const detailsFrame = document.getElementById('detailsFrame');
+  const hamburger = document.getElementById('hamburger');
+  const menu = document.getElementById('menu');
 
-  // Mostramos resumen por defecto (imagen)
   let isDetailsShown = false;
 
-  // Asegurar el estado inicial al cargar
   window.addEventListener('DOMContentLoaded', () => {
     previewFrame.style.display = 'block';
     detailsFrame.style.display = 'none';
     printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
+    localStorage.setItem('lastVisited', window.location.href);
   });
 
-  localStorage.setItem('lastVisited', window.location.href);
+  localStorage.setItem('lastLearningUrl', window.location.href);
 
-    boton.addEventListener('click', () => {
-        document.body.classList.add('page-transition');
-        // Espera a que termine la animación antes de redirigir (800ms)
-        setTimeout(() => {
-            window.history.go(-1)
-        }, 800);
-    });
+   boton.addEventListener('click', () => {
+    document.body.classList.add('page-transition');
 
+    setTimeout(() => {
+      console.log("🔙 Ejecutando history.back()");
+      history.back();
+    }, 800); // 6 segundos para ver el efecto antes de redirigir
+});
 
   printButton.addEventListener('click', () => {
     document.body.classList.add('page-transition');
 
     setTimeout(() => {
       if (isDetailsShown) {
-        // Volver al resumen
         previewFrame.style.display = 'block';
         detailsFrame.style.display = 'none';
         printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
       } else {
-        // Mostrar detalles
         previewFrame.style.display = 'none';
         detailsFrame.style.display = 'block';
         printButton.innerHTML = '<i class="fas fa-image"></i> Certificate Summary';
@@ -205,6 +254,9 @@
       isDetailsShown = !isDetailsShown;
     }, 800);
   });
-</script>
 
+  hamburger.addEventListener('click', () => {
+    menu.classList.toggle('show');
+  });
+</script>
 {% endblock %}

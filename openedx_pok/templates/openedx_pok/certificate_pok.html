@@ -225,16 +225,15 @@
     localStorage.setItem('lastVisited', window.location.href);
   });
 
-  localStorage.setItem('lastLearningUrl', window.location.href);
-
-   boton.addEventListener('click', () => {
+  boton.addEventListener('click', () => {
     document.body.classList.add('page-transition');
 
     setTimeout(() => {
       console.log("🔙 Ejecutando history.back()");
       history.back();
-    }, 800); // 6 segundos para ver el efecto antes de redirigir
-});
+    }, 6000); // 6 segundos para ver el efecto antes de redirigir
+
+  });
 
   printButton.addEventListener('click', () => {
     document.body.classList.add('page-transition');

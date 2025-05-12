@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from .models import PokCertificate
 from .client import PokApiClient
 from openedx.core.lib.courses import get_course_by_id
+from organizations import api as organizations_api
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -52,11 +53,20 @@ class CertificateCreatedFilter(PipelineStep):
                 logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
 
             signatory = course_cert_data.get("signatories", [{}])[0]
-            signatory_name = signatory.get("name", "Instructor")
-            organization = signatory.get("organization", "Organization")
-            platform = getattr(settings, 'PLATFORM_NAME', "OpenedX")
+            signatory_name = signatory.get("name", "")
+            signatory_title = signatory.get("title", "")
+            signatory_organization = signatory.get("organization", "")
+            platform = getattr(settings, 'PLATFORM_NAME', "")
 
             user_name = getattr(user.profile, "name")
+
+            course_org_display = course_instance.display_organization
+            organizations = organizations_api.get_course_organizations(course_key=course_key)
+            partner_long_name = None
+            if organizations:
+                organization = organizations[0]
+                org = organization.get('short_name')
+                partner_long_name = organization.get('name', org)
 
             pok_certificate, _ = PokCertificate.objects.get_or_create(
                 user_id=user.id,
@@ -70,11 +80,13 @@ class CertificateCreatedFilter(PipelineStep):
                     user=user,
                     course_key=course_id_str,
                     mode=enrollment_mode,
-                    platform=platform,
-                    organization=organization,
+                    organization=course_org_display or partner_long_name,
                     course_title=course_title,
                     grade=str(grade_obj.percent if grade_obj and hasattr(grade_obj, "percent") else 0),
                     signatory_name=signatory_name,
+                    signatory_title=signatory_title,
+                    signatory_organization=signatory_organization,
+                    platform=platform,
                 )
 
                 if response.get("success"):

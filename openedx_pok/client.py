@@ -118,7 +118,8 @@ class PokApiClient:
                 'error': str(e)
             }
 
-    def request_certificate(self, user, course_key, mode, platform, organization, course_title, grade=None, signatory_name=None):
+    def request_certificate(self, user, course_key, mode, organization, course_title,
+                            **kwargs):
         endpoint = urljoin(self.base_url, 'credential/')
         email = user.email
         first_name, last_name = split_name(user.profile.name)
@@ -127,10 +128,9 @@ class PokApiClient:
         logger.info(f"[POK] Active template custom parameters: {active_params}")
 
         custom_params = {}
-        if "grade" in active_params and grade:
-            custom_params["grade"] = grade
-        if "signatory" in active_params and signatory_name:
-            custom_params["signatory"] = signatory_name
+        for key, value in kwargs.items():
+            if key in active_params and value is not None:
+                custom_params[key] = value
 
         payload = {
             "credential": {

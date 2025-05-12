@@ -16,6 +16,8 @@ def plugin_settings(settings):
     settings.POK_TIMEOUT = 60
     settings.POK_TEMPLATE_ID = ""
     settings.POK_API_KEY = ""
+    # Possible values: [dd/MM/yyyy, MM/dd/yyyy]
+    settings.POK_DATE_FORMAT = "dd/MM/yyyy"
 
     # Log inicio de configuración
     logger.info("[POK] Applying plugin_settings for openedx_pok...")

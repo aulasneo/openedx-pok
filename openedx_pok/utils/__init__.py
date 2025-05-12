@@ -44,12 +44,20 @@ def split_name(full_name):
         >>> split_name("Leonardo Antonio Beroes")
         ('Leonardo', 'Antonio Beroes')
     """
+    if ',' in full_name:
+        parts = full_name.split(',')
+        return parts[1].strip(), parts[0].strip()
+
     parts = full_name.split()
 
-    if len(parts) == 1:
+    if not parts:
+        return ""
+    elif len(parts) == 1:
         return parts[0], ""
     elif len(parts) == 2:
         return parts[0], parts[1]
+    elif len(parts) == 4:
+        return ' '.join(parts[0:1]), ' '.join(parts[2:])
     else:
         # For compound names or multiple last names
         # This can be adjusted based on naming conventions in your region

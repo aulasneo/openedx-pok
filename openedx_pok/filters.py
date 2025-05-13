@@ -18,8 +18,40 @@ from .client import PokApiClient
 from openedx.core.lib.courses import get_course_by_id
 from organizations import api as organizations_api
 from django.conf import settings
+from opaque_keys.edx.keys import CourseKey
 
 logger = logging.getLogger(__name__)
+
+def _get_custom_params(course_key):
+
+    platform = getattr(settings, 'PLATFORM_NAME', "")
+    course_instance = get_course_by_id(course_key)
+    course_cert_data = course_instance.certificates.get("certificates")[0]
+    signatory = course_cert_data.get("signatories", [{}])[0]
+    signatory_name = signatory.get("name", "")
+    signatory_title = signatory.get("title", "")
+    signatory_organization = signatory.get("organization", "")
+
+    return {
+        "platform": platform,
+        "signatory_name": signatory_name,
+        "signatory_title": signatory_title,
+        "signatory_organization": signatory_organization,
+    }
+
+def _get_org_name(course_key) -> str:
+    course_instance = get_course_by_id(course_key)
+
+    course_org_display = course_instance.display_organization
+    if course_org_display:
+        return course_org_display
+
+    organizations = organizations_api.get_course_organizations(course_key=course_key)
+    if organizations:
+        organization = organizations[0]
+        org = organization.get('short_name')
+        return organization.get('name', org)
+
 
 class CertificateCreatedFilter(PipelineStep):
     """
@@ -52,21 +84,10 @@ class CertificateCreatedFilter(PipelineStep):
                 course_title = getattr(course_instance, "display_name", "")
                 logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
 
-            signatory = course_cert_data.get("signatories", [{}])[0]
-            signatory_name = signatory.get("name", "")
-            signatory_title = signatory.get("title", "")
-            signatory_organization = signatory.get("organization", "")
-            platform = getattr(settings, 'PLATFORM_NAME', "")
-
             user_name = getattr(user.profile, "name")
 
-            course_org_display = course_instance.display_organization
-            organizations = organizations_api.get_course_organizations(course_key=course_key)
-            partner_long_name = None
-            if organizations:
-                organization = organizations[0]
-                org = organization.get('short_name')
-                partner_long_name = organization.get('name', org)
+            custom_params = _get_custom_params(course_key)
+            custom_params["grade"] = str(round(grade_obj.percent * 100)) if grade_obj and hasattr(grade_obj, "percent") else ""
 
             pok_certificate, _ = PokCertificate.objects.get_or_create(
                 user_id=user.id,
@@ -80,13 +101,9 @@ class CertificateCreatedFilter(PipelineStep):
                     user=user,
                     course_key=course_id_str,
                     mode=enrollment_mode,
-                    organization=course_org_display or partner_long_name,
+                    organization=_get_org_name(course_key),
                     course_title=course_title,
-                    grade=str(round(grade_obj.percent * 100)) if grade_obj and hasattr(grade_obj, "percent") else "",
-                    signatory_name=signatory_name,
-                    signatory_title=signatory_title,
-                    signatory_organization=signatory_organization,
-                    platform=platform,
+                    **custom_params,
                 )
 
                 if response.get("success"):
@@ -132,6 +149,7 @@ class CertificateRenderFilter(PipelineStep):
     def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
         user_id = context.get('accomplishment_user_id')
         course_id = context.get('course_id')
+
         if not user_id or not course_id:
             logger.warning("Missing user_id or course_id in certificate render context")
             return {"context": context, "custom_template": custom_template}
@@ -219,12 +237,16 @@ class CertificateRenderFilter(PipelineStep):
                 logger.warning(f"User with id={user_id} not found in database.")
                 return {"context": context, "custom_template": custom_template}
 
+            course_key = CourseKey.from_string(course_id)
+            custom_params = _get_custom_params(course_key)
+            custom_params['grade'] = "N/A"
+            organization = _get_org_name(course_key)
+
             preview_response = pok_client.get_template_preview(
                 user=user,
-                signatory_name=context.get("certificate_data", {}).get("signatories", [{}])[0].get("name", "Instructor"),
-                organization=context.get("organization_long_name", "Organization"),
+                organization=organization,
                 course_title=context.get("certificate_data", {}).get("course_title") or context.get("accomplishment_copy_course_name"),
-                grade=context.get("certificate_data", {}).get("description", "N/A"),
+                **custom_params
             )
 
             if preview_response.get("success"):

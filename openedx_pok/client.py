@@ -125,8 +125,6 @@ class PokApiClient:
         first_name, last_name = split_name(user.profile.name)
 
         active_params = self._get_active_custom_parameters()
-        logger.info(f"[POK] Active template custom parameters: {active_params}")
-
         custom_params = {}
         for param in active_params:
             custom_params[param] = kwargs.get(param, "")
@@ -140,7 +138,7 @@ class PokApiClient:
                 ],
                 "skipAcceptance": True,
                 "emissionType": self.emission_type,
-                "dateFormat": "dd/MM/yyyy",
+                "dateFormat": settings.POK_DATE_FORMAT,
                 "emissionDate": datetime.now().isoformat(),
                 "title": course_title,
                 "emitter": organization
@@ -247,7 +245,7 @@ class PokApiClient:
             }
 
 
-    def get_template_preview(self, user, signatory_name, organization, course_title, grade):
+    def get_template_preview(self, user, organization, course_title, **kwargs):
         """
         Get a preview image of a certificate template using the correct minimal payload.
         """
@@ -257,15 +255,13 @@ class PokApiClient:
 
         active_params = self._get_active_custom_parameters()
         custom_params = {}
-        if "grade" in active_params and grade:
-            custom_params[active_params["grade"]] = grade
-        if "signatory" in active_params and signatory_name:
-            custom_params[active_params["signatory"]] = signatory_name
+        for param in active_params:
+            custom_params[param] = kwargs.get(param, "")
 
         payload = {
             "credential": {
                 "emissionType": self.emission_type,
-                "dateFormat": "dd/MM/yyyy",
+                "dateFormat": settings.POK_DATE_FORMAT,
                 "emissionDate": datetime.now().isoformat(),
                 "title": course_title,
                 "emitter": organization

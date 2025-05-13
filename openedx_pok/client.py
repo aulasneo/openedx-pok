@@ -251,7 +251,11 @@ class PokApiClient:
         """
         endpoint = urljoin(self.base_url, "template/preview")
 
-        first_name, last_name = split_name(user.profile.name)
+        user_name = getattr(user.profile, "name")
+        if not user_name:
+            user_name = user.username
+
+        first_name, last_name = split_name(user_name)
 
         active_params = self._get_active_custom_parameters()
         custom_params = {}

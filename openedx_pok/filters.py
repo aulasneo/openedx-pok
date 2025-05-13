@@ -85,6 +85,8 @@ class CertificateCreatedFilter(PipelineStep):
                 logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
 
             user_name = getattr(user.profile, "name")
+            if not user_name:
+                user_name = user.username
 
             custom_params = _get_custom_params(course_key)
             custom_params["grade"] = str(round(grade_obj.percent * 100)) if grade_obj and hasattr(grade_obj, "percent") else ""

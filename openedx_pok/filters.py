@@ -82,7 +82,7 @@ class CertificateCreatedFilter(PipelineStep):
                     mode=enrollment_mode,
                     organization=course_org_display or partner_long_name,
                     course_title=course_title,
-                    grade=str(grade_obj.percent if grade_obj and hasattr(grade_obj, "percent") else 0),
+                    grade=str(round(grade_obj.percent * 100)) if grade_obj and hasattr(grade_obj, "percent") else "",
                     signatory_name=signatory_name,
                     signatory_title=signatory_title,
                     signatory_organization=signatory_organization,

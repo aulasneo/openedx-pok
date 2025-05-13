@@ -128,9 +128,8 @@ class PokApiClient:
         logger.info(f"[POK] Active template custom parameters: {active_params}")
 
         custom_params = {}
-        for key, value in kwargs.items():
-            if key in active_params and value is not None:
-                custom_params[key] = value
+        for param in active_params:
+            custom_params[param] = kwargs.get(param, "")
 
         payload = {
             "credential": {

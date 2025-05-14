@@ -1,294 +1,318 @@
-""
 """
 POK certificate filter implementations.
 """
+
 import json
 import logging
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.contrib.auth import get_user_model
+
+from opaque_keys.edx.keys import CourseKey
+from openedx.core.lib.courses import get_course_by_id
+from organizations import api as organizations_api
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import (
     CertificateRenderStarted, CertificateCreationRequested
 )
 
-from django.template.loader import render_to_string
-
 from .models import PokCertificate
 from .client import PokApiClient
-from openedx.core.lib.courses import get_course_by_id
-from organizations import api as organizations_api
-from django.conf import settings
-from opaque_keys.edx.keys import CourseKey
 
 logger = logging.getLogger(__name__)
 
-def _get_custom_params(course_key):
+# === Helper Functions ===
 
-    platform = getattr(settings, 'PLATFORM_NAME', "")
-    course_instance = get_course_by_id(course_key)
-    course_cert_data = course_instance.certificates.get("certificates")[0]
+def _get_signatory_data(course_cert_data):
+    """
+    Extracts signatory information (name, title, organization) from the course certificate data.
+    """
     signatory = course_cert_data.get("signatories", [{}])[0]
-    signatory_name = signatory.get("name", "")
-    signatory_title = signatory.get("title", "")
-    signatory_organization = signatory.get("organization", "")
-
     return {
-        "platform": platform,
-        "signatory_name": signatory_name,
-        "signatory_title": signatory_title,
-        "signatory_organization": signatory_organization,
+        "signatory_name": signatory.get("name", ""),
+        "signatory_title": signatory.get("title", ""),
+        "signatory_organization": signatory.get("organization", "")
     }
 
-def _get_org_name(course_key) -> str:
-    course_instance = get_course_by_id(course_key)
+def _get_custom_params(course_key):
+    """
+    Builds a dictionary with custom parameters to send to the POK API.
+    Includes platform name and signatory info.
+    """
+    course = get_course_by_id(course_key)
+    cert_data = course.certificates.get("certificates")[0]
+    params = {
+        "platform": getattr(settings, 'PLATFORM_NAME', ""),
+        **_get_signatory_data(cert_data),
+    }
+    return params
 
-    course_org_display = course_instance.display_organization
-    if course_org_display:
-        return course_org_display
+def _get_org_name(course_key):
+    """
+    Returns the organization name for the course, using either display_organization
+    or the organizations API fallback.
+    """
+    course = get_course_by_id(course_key)
+    if course.display_organization:
+        return course.display_organization
 
     organizations = organizations_api.get_course_organizations(course_key=course_key)
     if organizations:
-        organization = organizations[0]
-        org = organization.get('short_name')
-        return organization.get('name', org)
+        return organizations[0].get('name', organizations[0].get('short_name'))
+    return ""
 
+
+
+# === Certificate Creation Filter ===
 
 class CertificateCreatedFilter(PipelineStep):
     """
-    Filter to handle the creation of POK certificates when a certificate is issued.
+    Triggered when a certificate is issued.
+    Handles generation and storage of a POK certificate.
     """
 
     def run_filter(self, **kwargs):
-        logger.info(f"[POK] CertificateCreatedFilter kwargs context: {json.dumps({k: str(v) for k, v in kwargs.items()}, indent=2)}")
+        """
+        Handles the full process of creating a POK certificate.
+        - Checks if certificate already exists.
+        - If not, requests one via POK API.
+        - Stores metadata returned by the API into the PokCertificate model.
+        """
 
         user = kwargs.get("user")
         course_key = kwargs.get("course_key")
-        grade_obj = kwargs.get("grade")
+        grade = kwargs.get("grade")
         enrollment_mode = kwargs.get("enrollment_mode")
 
         if not user or not course_key:
-            logger.error("[POK] Missing user or course_key in certificate creation context.")
-            raise CertificateCreationRequested.PreventCertificateCreation(
-                message="[POK] Missing required context to create certificate."
-            )
+            raise CertificateCreationRequested.PreventCertificateCreation("[POK] Missing required context to create certificate.")
 
-        course_id_str = str(course_key)
+        course_id = str(course_key)
+        user_name = getattr(user.profile, "name", "") or user.username
+        custom_params = _get_custom_params(course_key)
+        if grade and hasattr(grade, "percent"):
+            custom_params["grade"] = str(round(grade.percent * 100))
 
         try:
-            logger.info(f"[POK] Triggered CertificateCreatedFilter for user={user.id}, course={course_id_str}")
-            course_instance = get_course_by_id(course_key)
-            course_cert_data = course_instance.certificates.get("certificates")[0]
-            course_title = course_cert_data.get("course_title")
+            pok_certificate, _ = PokCertificate.objects.get_or_create(user_id=user.id, course_id=course_id)
 
-            if not course_title:
-                course_title = getattr(course_instance, "display_name", "")
-                logger.info(f"[POK] course_title was empty, fallback to course_instance.display_name: {course_title}")
+            if pok_certificate.pok_certificate_id:
+                logger.info(f"[POK] Certificate already exists for user={user.id}, course={course_id}")
+                return kwargs
 
-            user_name = getattr(user.profile, "name")
-            if not user_name:
-                user_name = user.username
+            course = get_course_by_id(course_key)
+            course_cert_data = course.certificates.get("certificates")[0]
+            course_title = course_cert_data.get("course_title") or course.display_name
 
-            custom_params = _get_custom_params(course_key)
-            custom_params["grade"] = str(round(grade_obj.percent * 100)) if grade_obj and hasattr(grade_obj, "percent") else ""
-
-            pok_certificate, _ = PokCertificate.objects.get_or_create(
-                user_id=user.id,
-                course_id=course_id_str,
+            client = PokApiClient(course_id)
+            response = client.request_certificate(
+                user=user,
+                course_key=course_id,
+                mode=enrollment_mode,
+                organization=_get_org_name(course_key),
+                course_title=course_title,
+                **custom_params
             )
 
-            pok_client = PokApiClient(course_id_str)
-
-            if not pok_certificate.pok_certificate_id:
-                response = pok_client.request_certificate(
-                    user=user,
-                    course_key=course_id_str,
-                    mode=enrollment_mode,
-                    organization=_get_org_name(course_key),
-                    course_title=course_title,
-                    **custom_params,
+            if not response.get("success"):
+                raise CertificateCreationRequested.PreventCertificateCreation(
+                    message=f"[POK] Certificate API failed: {response.get('error')}"
                 )
 
-                if response.get("success"):
-                    data = response["content"]
+            content = response["content"]
+            credential = content.get("credential", {})
+            receiver = content.get("receiver", {})
 
-                    pok_certificate.pok_certificate_id = data.get("id")
-                    pok_certificate.state = data.get("state")
-                    pok_certificate.view_url = data.get("viewUrl")
-                    pok_certificate.emission_type = data.get("credential", {}).get("emissionType")
-                    pok_certificate.emission_date = data.get("credential", {}).get("emissionDate")
-                    pok_certificate.title = data.get("credential", {}).get("title")
-                    pok_certificate.emitter = data.get("credential", {}).get("emitter")
-                    pok_certificate.tags = data.get("credential", {}).get("tags", [])
-                    pok_certificate.receiver_email = data.get("receiver", {}).get("email")
-                    pok_certificate.receiver_name = user_name
-                    pok_certificate.save()
+            pok_certificate.pok_certificate_id = content.get("id")
+            pok_certificate.state = content.get("state")
+            pok_certificate.view_url = content.get("viewUrl")
+            pok_certificate.emission_type = credential.get("emissionType")
+            pok_certificate.emission_date = credential.get("emissionDate")
+            pok_certificate.title = credential.get("title")
+            pok_certificate.emitter = credential.get("emitter")
+            pok_certificate.tags = credential.get("tags", [])
+            pok_certificate.receiver_email = receiver.get("email")
+            pok_certificate.receiver_name = user_name
+            pok_certificate.save()
 
-                    logger.info(f"[POK] Certificate created and stored for user={user.id}, course={course_id_str}")
-                else:
-                    error_msg = f"[POK] API certificate request failed: {response.get('error')}"
-                    logger.error(error_msg)
-                    raise CertificateCreationRequested.PreventCertificateCreation(message=error_msg)
-            else:
-                logger.info(f"[POK] Existing certificate already found for user={user.id}, course={course_id_str}")
+            logger.info(f"[POK] Certificate created for user={user.id}, course={course_id}")
 
         except Exception as e:
-            logger.exception(f"[POK] Unexpected error in CertificateCreatedFilter: {str(e)}")
+            logger.exception("[POK] Unexpected error during certificate creation: %s", str(e))
             raise CertificateCreationRequested.PreventCertificateCreation(
-                message=f"[POK] Unhandled exception during certificate creation: {str(e)}"
+                message=f"[POK] Unexpected error: {str(e)}"
             )
 
         return kwargs
 
+# === Certificate Render Filter ===
 
 class CertificateRenderFilter(PipelineStep):
     """
-    Process CertificateRenderStarted filter to redirect to POK certificate.
-
-    This filter intercepts certificate render requests and redirects the user
-    to the POK certificate page if available.
+    Renders or previews the certificate when a user views it.
     """
-
     def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
-        user_id = context.get('accomplishment_user_id')
-        course_id = context.get('course_id')
+        """
+        Entry point for the filter.
+        Determines whether to show a preview (for unissued certs) or render an issued certificate.
+        """
+        
+        user_id = context.get("accomplishment_user_id")
+        course_id = context.get("course_id")
 
         if not user_id or not course_id:
-            logger.warning("Missing user_id or course_id in certificate render context")
+            logger.warning("[POK] Missing user_id or course_id in render context")
             return {"context": context, "custom_template": custom_template}
 
-        pok_client = PokApiClient(course_id)
+        client = PokApiClient(course_id)
 
-        if not pok_client.api_key:
-            logger.warning("POK API key is not set. Skipping POK certificate rendering.")
-            return {"context": context, "custom_template": custom_template}
+        if not PokCertificate.objects.filter(user_id=user_id, course_id=course_id).exists():
+            return self._render_preview(context, user_id, course_id, client)
 
+        return self._render_issued_certificate(context, user_id, course_id, client)
+
+    def _render_preview(self, context, user_id, course_id, client):
+        """
+        Renders a certificate preview using the POK API.
+        This is typically shown in Studio or in cases where no certificate exists yet.
+        """
         try:
-            certificate = PokCertificate.objects.get(
-                user_id=user_id,
-                course_id=course_id,
-                state="emitted"
-            )
-            state = "emitted"
-        except PokCertificate.DoesNotExist:
-            try:
-                certificate = PokCertificate.objects.get(
-                    user_id=user_id,
-                    course_id=course_id,
-                    state="processing"
-                )
-                pok_response = pok_client.get_credential_details(certificate.pok_certificate_id)
-                content = pok_response.get("content", {})
-                state = content.get("state", "processing")
-                certificate.state = state
-                certificate.save()
-            except PokCertificate.DoesNotExist:
-                certificate = None
-                state = "preview"
-
-        if state == "emitted":
-            try:
-                response = pok_client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
-
-                if not response.get("success"):
-                    raise Exception(f"POK API returned failure: {response.get('error')}")
-
-                content = response.get("content", {})
-                image_content = content.get("location")
-
-                if not image_content:
-                    raise Exception("POK response missing 'location' for decrypted image.")
-
-                html_content = render_to_string("openedx_pok/certificate_pok.html", {
-                    'document_title': context.get('document_title', 'Certificate'),
-                    'logo_src': context.get('logo_src', ''),
-                    'accomplishment_copy_name': context.get('accomplishment_copy_name', 'Student'),
-                    'image_content': image_content,
-                    'certificate_url': certificate.view_url
-                })
-
-            except Exception as e:
-                logger.error(f"Failed to render emitted certificate from POK: {str(e)}")
-                html_content = render_to_string("openedx_pok/certificate_error.html", {
-                    'document_title': context.get('document_title', 'Error'),
-                    'error_message': "We couldn't render your certificate at this time. Please try again later.",
-                    'course_id': course_id,
-                    'user_id': user_id,
-                })
-                raise CertificateRenderStarted.RenderCustomResponse(
-                    message="Error rendering POK certificate",
-                    response=HttpResponse(
-                        content=html_content,
-                        content_type="text/html; charset=utf-8",
-                        status=500
-                    )
-                )
-
-        elif state == "processing":
-            html_content = render_to_string("openedx_pok/certificate_processing.html", {
-                'document_title': context.get('document_title', 'Certificate in process'),
-                'course_id': course_id,
-                'user_id': user_id,
-            })
-
-        elif state == "preview":
-            from django.contrib.auth import get_user_model
             User = get_user_model()
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                logger.warning(f"User with id={user_id} not found in database.")
-                return {"context": context, "custom_template": custom_template}
-
+            user = User.objects.get(id=user_id)
             course_key = CourseKey.from_string(course_id)
             custom_params = _get_custom_params(course_key)
-            custom_params['grade'] = "N/A"
-            organization = _get_org_name(course_key)
 
-            preview_response = pok_client.get_template_preview(
+            response = client.get_template_preview(
                 user=user,
-                organization=organization,
+                organization=_get_org_name(course_key),
                 course_title=context.get("certificate_data", {}).get("course_title") or context.get("accomplishment_copy_course_name"),
                 **custom_params
             )
 
-            if preview_response.get("success"):
-                preview_url = preview_response.get("preview_url")
-                if not preview_url:
-                    logger.error(f"POK preview URL not found in response: {json.dumps(preview_response, indent=2)}")
-                    return {"context": context, "custom_template": custom_template}
+            if not response.get("success"):
+                logger.error(f"[POK] Preview API failed: {response.get('error')}")
+                return
 
-                html_content = render_to_string("openedx_pok/certificate_preview.html", {
-                    'document_title': "Certificate Preview",
-                    'preview_url': preview_url,
-                    'user_id': user_id,
-                    'course_id': course_id,
-                    'logo_src': context.get('logo_src', ''),
-                    'learning_microfrontend_url': f"{settings.LEARNING_MICROFRONTEND_URL}/course/{course_id}/progress",
-                })
+            preview_url = response["preview_url"]
+            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
 
-                raise CertificateRenderStarted.RenderCustomResponse(
-                    message="Rendering certificate preview",
-                    response=HttpResponse(html_content)
-                )
-            else:
-                logger.error(f"POK preview request failed: {preview_response.get('error')}")
-                return {"context": context, "custom_template": custom_template}
-
-
-        else:
-            html_content = render_to_string("openedx_pok/certificate_error.html", {
-                'document_title': context.get('document_title', 'Error'),
-                'error_message': f"The current state is '{state}'. Please try again later.",
-                'course_id': course_id,
-                'user_id': user_id,
-                'learning_microfrontend_url': f"{settings.LEARNING_MICROFRONTEND_URL}/course/{course_id}/progress",
+            html = render_to_string("openedx_pok/certificate_preview.html", {
+                "document_title": "Certificate Preview",
+                "preview_url": preview_url,
+                "user_id": user_id,
+                "course_id": course_id,
+                "authoring_microfrontend_url": f"{authoring_url}/course/{course_id}/certificates",
+                "logo_src": context.get("logo_src", "")
             })
 
-        raise CertificateRenderStarted.RenderCustomResponse(
-            message=f"Rendering certificate page (state={state})",
-            response=HttpResponse(
-                content=html_content,
-                content_type="text/html; charset=utf-8",
-                status=200
+            raise CertificateRenderStarted.RenderCustomResponse(
+                "Rendering certificate preview",
+                HttpResponse(html, content_type="text/html; charset=utf-8", status=200)
             )
+
+        except CertificateRenderStarted.RenderCustomResponse as r:
+            raise r
+        except Exception as e:
+            logger.exception(f"[POK] Error rendering preview: {str(e)}")
+
+    def _render_issued_certificate(self, context, user_id, course_id, client):
+        """
+        Determines the current certificate state and routes rendering accordingly.
+        Supports 'emitted' and 'processing' states, or shows an error if no cert is found.
+        """
+        try:
+            certificate = PokCertificate.objects.filter(user_id=user_id, course_id=course_id).first()
+            if not certificate:
+                raise ValueError("No certificate record found")
+
+            if certificate.state == "emitted":
+                return self._render_emitted_certificate(context, certificate, client)
+            elif certificate.state == "processing":
+                return self._render_processing_certificate(context, certificate, client)
+            else:
+                return self._render_error_page(context, "Invalid certificate state", course_id, user_id)
+
+        except CertificateRenderStarted.RenderCustomResponse as r:
+            raise r
+        except Exception as e:
+            logger.exception("[POK] Error rendering issued certificate: %s", str(e))
+            return self._render_error_page(context, str(e), course_id, user_id)
+
+    def _render_emitted_certificate(self, context, certificate, client):
+        """
+        Renders the final issued certificate with full image and metadata.
+        Uses decrypted data from the POK API.
+        """
+        try:
+            response = client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
+            if not response.get("success"):
+                raise Exception(f"Failed to fetch credential details: {response.get('error')}")
+
+            image_content = response["content"].get("location")
+            if not image_content:
+                raise Exception("Missing certificate image URL")
+
+            html = render_to_string("openedx_pok/certificate_pok.html", {
+                "document_title": context.get("document_title", "Certificate"),
+                "logo_src": context.get("logo_src", ""),
+                "accomplishment_copy_name": context.get("accomplishment_copy_name", "Student"),
+                "image_content": image_content,
+                "certificate_url": certificate.view_url
+            })
+
+            raise CertificateRenderStarted.RenderCustomResponse(
+                "Rendering emitted certificate",
+                HttpResponse(html, content_type="text/html; charset=utf-8", status=200)
+            )
+
+        except CertificateRenderStarted.RenderCustomResponse as r:
+            raise r
+        except Exception as e:
+            logger.error("[POK] Failed to render emitted certificate: %s", str(e))
+            return self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
+
+    def _render_processing_certificate(self, context, certificate, client):
+        """
+        Renders a 'processing' status page for certificates that haven't been emitted yet.
+        Also updates the certificate state if the POK API returns new status.
+        """
+        try:
+            response = client.get_credential_details(certificate.pok_certificate_id)
+            state = response.get("content", {}).get("state", "processing")
+            certificate.state = state
+            certificate.save()
+
+            html = render_to_string("openedx_pok/certificate_processing.html", {
+                "document_title": context.get("document_title", "Certificate in process"),
+                "course_id": certificate.course_id,
+                "user_id": certificate.user_id
+            })
+
+            raise CertificateRenderStarted.RenderCustomResponse(
+                "Rendering processing certificate",
+                HttpResponse(html, content_type="text/html; charset=utf-8", status=200)
+            )
+
+        except CertificateRenderStarted.RenderCustomResponse as r:
+            raise r
+        except Exception as e:
+            logger.exception("[POK] Failed to render processing certificate: %s", str(e))
+            return self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
+
+    def _render_error_page(self, context, error_message, course_id, user_id):
+        """
+        Renders a generic error page with a user-friendly message when rendering fails.
+        """
+        html = render_to_string("openedx_pok/certificate_error.html", {
+            "document_title": context.get("document_title", "Error"),
+            "error_message": error_message,
+            "course_id": course_id,
+            "user_id": user_id
+        })
+
+        raise CertificateRenderStarted.RenderCustomResponse(
+            f"Rendering error page: {error_message}",
+            HttpResponse(html, content_type="text/html; charset=utf-8", status=500)
         )

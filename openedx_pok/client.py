@@ -42,7 +42,7 @@ class PokApiClient:
         }
 
         if is_preview:
-            headers['Content-Type'] = 'application/json'  # Requerido por /template-preview
+            headers['Content-Type'] = 'application/json'  # Required by /template-preview
         return headers
 
     def _get_active_custom_parameters(self):
@@ -217,34 +217,6 @@ class PokApiClient:
                 'error': str(e)
             }
 
-    def resend_approval_request(self, credential_id):
-        """
-        Resend an approval request for a certificate.
-
-        Args:
-            credential_id: ID of the credential
-
-        Returns:
-            dict: Response from the API
-        """
-        endpoint = urljoin(self.base_url, f'credentials/{credential_id}/resend-approval')
-
-        try:
-            response = requests.post(
-                endpoint,
-                headers=self._get_headers(),
-                timeout=self.timeout
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error resending approval request: {str(e)}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
-
-
     def get_template_preview(self, user, organization, course_title, **kwargs):
         """
         Get a preview image of a certificate template using the correct minimal payload.
@@ -284,10 +256,6 @@ class PokApiClient:
         }
 
         try:
-            logger.info(f"Requesting certificate template preview for user {user.id}")
-            logger.info(f"POK template preview endpoint: {endpoint}")
-            logger.info(f"POK template preview payload: {json.dumps(payload, indent=2)}")
-
             response = requests.post(
                 endpoint,
                 json=payload,

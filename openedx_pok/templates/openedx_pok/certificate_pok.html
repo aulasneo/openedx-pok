@@ -1,14 +1,10 @@
 {% block content %}
 <style>
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-  }
-
-  body.page-transition {
-    transform: translateX(100vw);
-    transition: transform 0.8s ease-in-out;
   }
 
   body {
@@ -24,14 +20,14 @@
     padding: 0;
     background-color: white;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 15px 20px;
+    padding: 15px 36px;
     position: relative;
   }
 
@@ -58,28 +54,47 @@
     user-select: none;
   }
 
-  .print-button,
   .boton-superior {
-    background-color: white;
-    color: #007bff;
-    border: 2px solid white;
+    background-color: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
     border-radius: 5px;
-    padding: 10px 25px;
     font-size: 16px;
-    font-weight: bold;
     cursor: pointer;
     margin: 0;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 20px;
+  }
+
+  .print-button {
+    background-color: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 5px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0;
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
 
-  .boton-superior:hover,
-  .print-button:hover {
-    background-color: rgb(201, 223, 246);
+  .boton-superior:hover {
+    background-color: white;
+    color: var(--primary);
     box-shadow: none;
+    border: 1px solid var(--primary);
+  }
+
+  .print-button:hover {
+    background-color: var(--primary);
+    color: white;
+    box-shadow: none;
+    border: 1px solid var(--primary);
   }
 
   @media (max-width: 768px) {
@@ -104,7 +119,7 @@
       flex-direction: column;
       align-items: flex-end;
       padding: 10px 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       display: none;
       z-index: 999;
     }
@@ -117,6 +132,17 @@
     .boton-superior {
       width: 100%;
       justify-content: flex-end;
+      border: none;
+      background-color: transparent;
+      color: var(--primary);
+    }
+
+    .print-button:hover,
+    .boton-superior:hover {
+      background-color: transparent;
+      color: var(--primary);
+      box-shadow: none;
+      border: none;
     }
   }
 
@@ -155,6 +181,7 @@
     margin: 0;
     padding: 0;
   }
+
   .print-button:hover {
     transform: none;
   }
@@ -174,22 +201,19 @@
 
 <section class="header-section">
   <div class="header-content">
-    <!-- Logo: centro en desktop, izquierda en mobile -->
     <div class="logo-container">
       <a href="{% url 'dashboard' %}">
         <img src="{{ logo_src }}" alt="Logo" class="logo">
       </a>
     </div>
 
-    <!-- Botones: alineados a la derecha en desktop, dentro del menú en mobile -->
     <div class="menu" id="menu">
       <button id="printButton" class="print-button">
         <i class="fas fa-file-alt"></i> Certificate Details
       </button>
-      <button id="botonToggle" class="boton-superior">Volver</button>
+      <button id="botonToggle" class="boton-superior">Go back</button>
     </div>
 
-    <!-- Hamburguesa (solo visible en mobile) -->
     <div class="hamburger" id="hamburger">&#9776;</div>
   </div>
 </section>
@@ -224,31 +248,28 @@
   });
 
   boton.addEventListener('click', () => {
-    document.body.classList.add('page-transition');
-
-    setTimeout(() => {
-      history.back();
-    }, 800);
-
+    if (window.innerWidth <= 768) {
+      menu.classList.remove('show');
+    }
+    history.back();
   });
 
   printButton.addEventListener('click', () => {
-    document.body.classList.add('page-transition');
+    if (isDetailsShown) {
+      previewFrame.style.display = 'block';
+      detailsFrame.style.display = 'none';
+      printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
+    } else {
+      previewFrame.style.display = 'none';
+      detailsFrame.style.display = 'block';
+      printButton.innerHTML = '<i class="fas fa-image"></i> Certificate Summary';
+    }
 
-    setTimeout(() => {
-      if (isDetailsShown) {
-        previewFrame.style.display = 'block';
-        detailsFrame.style.display = 'none';
-        printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
-      } else {
-        previewFrame.style.display = 'none';
-        detailsFrame.style.display = 'block';
-        printButton.innerHTML = '<i class="fas fa-image"></i> Certificate Summary';
-      }
+    if (window.innerWidth <= 768) {
+      menu.classList.remove('show');
+    }
 
-      document.body.classList.remove('page-transition');
-      isDetailsShown = !isDetailsShown;
-    }, 800);
+    isDetailsShown = !isDetailsShown;
   });
 
   hamburger.addEventListener('click', () => {

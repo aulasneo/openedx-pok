@@ -17,69 +17,75 @@
       overflow: hidden;
     }
 
-    body.page-transition {
-      transform: translateX(100vw);
-      transition: transform 0.8s ease-in-out;
-    }
 
-    .top-bar {
-      position: fixed;
+    .header-section {
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      background: #007bff;
+      width: 100%;
+      padding: 15px 36px;
+      background-color: white;
+      z-index: 1000;
       display: flex;
       justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       align-items: center;
-      padding: 0 20px;
-      z-index: 10;
-    }
+  }
 
-    .top-bar img.logo {
-      height: 30px;
-    }
+  .boton-superior {
+    background-color: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 20px;
+  }
+  .boton-superior:hover {
+    background-color: white;
+    color: var(--primary);
+    box-shadow: none;
+    border: 1px solid var(--primary);
+  }
 
-    .back-button {
-      background-color: #ffffff;
-      color: #007bff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s;
-    }
+  .logo-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 
-    .back-button:hover {
-      background-color: #f0f0f0;
-    }
+  .logo {
+    height: 30px;
+  }
 
-    .image-container {
-      position: absolute;
-      top: 60px;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
+  .image-container {
+    position: absolute;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
 
-    .image-container img {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
+  .image-container img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
   </style>
 </head>
 <body>
-  <div class="top-bar">
+  <div class="header-section">
     <img src="{{ logo_src }}" alt="Logo" class="logo">
-    <button id="goBackBtn" class="back-button">Volver</button>
+    <button id="goBackBtn" class="boton-superior">Go back</button>
   </div>
 
   <div class="image-container">

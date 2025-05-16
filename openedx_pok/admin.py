@@ -18,6 +18,7 @@ class CertificatePokApiAdmin(admin.ModelAdmin):
         'course_id',
         'state',
         'view_url',
+        "page",
         'created',
         'modified',
     ]
@@ -27,11 +28,13 @@ class CertificatePokApiAdmin(admin.ModelAdmin):
         'certificate_id',
         'view_url',
         'title',
+        "page",
         'receiver_email',
         'receiver_name',
     ]
     list_filter = [
         'state',
+        "page",
         'emitter',
         'emission_type',
         'created',
@@ -44,7 +47,7 @@ class CertificatePokApiAdmin(admin.ModelAdmin):
 class CourseTemplateAdmin(admin.ModelAdmin):
     """Admin interface for CertificateTemplate model."""
 
-    list_display = ['course', 'template_id', 'emission_type','created', 'modified']
+    list_display = ['course', 'template_id', 'emission_type', 'page_id','created', 'modified']
     search_fields = ['course__id', 'template_id']
     readonly_fields = ['created', 'modified']
     

@@ -76,6 +76,12 @@ class PokCertificate(TimeStampedModel):
         null=True,
         default=list
     )
+    page = models.CharField(
+        max_length=255,
+        help_text="Page ID associated with the template",
+        blank=True,
+        null=True
+    )
     receiver_email = models.EmailField(
         max_length=255,
         help_text="Email of the certificate receiver",
@@ -124,6 +130,13 @@ class CertificateTemplate(TimeStampedModel):
             ('pok', 'POK'),
             ('blockchain', 'Blockchain')
         ]
+    )
+    
+    page_id = models.CharField(
+        max_length=255,
+        help_text="Page ID associated with the template",
+        blank=True,
+        null=True
     )
 
 

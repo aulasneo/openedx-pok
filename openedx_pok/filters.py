@@ -18,7 +18,7 @@ from openedx_filters.learning.filters import (
     CertificateRenderStarted, CertificateCreationRequested
 )
 
-from .models import PokCertificate
+from .models import CertificateTemplate, PokCertificate
 from .client import PokApiClient
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,11 @@ class CertificateCreatedFilter(PipelineStep):
             course = get_course_by_id(course_key)
             course_cert_data = course.certificates.get("certificates")[0]
             course_title = course_cert_data.get("course_title") or course.display_name
+            
+            try:
+                template = CertificateTemplate.objects.get(course=course_key)
+            except CertificateTemplate.DoesNotExist:
+                template = None
 
             client = PokApiClient(course_id)
             response = client.request_certificate(
@@ -133,6 +138,7 @@ class CertificateCreatedFilter(PipelineStep):
             pok_certificate.title = credential.get("title")
             pok_certificate.emitter = credential.get("emitter")
             pok_certificate.tags = credential.get("tags", [])
+            pok_certificate.page = template.page_id if template else settings.PAGE_ID
             pok_certificate.receiver_email = receiver.get("email")
             pok_certificate.receiver_name = user_name
             pok_certificate.save()

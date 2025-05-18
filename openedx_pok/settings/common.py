@@ -16,7 +16,7 @@ def plugin_settings(settings):
     settings.POK_TIMEOUT = 60
     settings.POK_TEMPLATE_ID = ""
     settings.POK_API_KEY = ""
-    settings.PAGE_ID = ""
+    settings.POK_PAGE_ID = ""
     # Possible values: [dd/MM/yyyy, MM/dd/yyyy]
     settings.POK_DATE_FORMAT = "dd/MM/yyyy"
 

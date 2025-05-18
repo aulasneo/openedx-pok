@@ -31,7 +31,7 @@ class PokApiClient:
         self.api_key =  settings.POK_API_KEY
         self.template = template.template_id if template else settings.POK_TEMPLATE_ID
         self.emission_type = template.emission_type if template else "pok"
-        self.page = template.page_id if template else settings.PAGE_ID
+        self.page = template.page_id if template and template.page_id is not None else settings.POK_PAGE_ID
 
         self.base_url = settings.POK_API_URL
         self.timeout = settings.POK_TIMEOUT

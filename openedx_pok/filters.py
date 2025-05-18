@@ -138,7 +138,7 @@ class CertificateCreatedFilter(PipelineStep):
             pok_certificate.title = credential.get("title")
             pok_certificate.emitter = credential.get("emitter")
             pok_certificate.tags = credential.get("tags", [])
-            pok_certificate.page = template.page_id if template else settings.PAGE_ID
+            pok_certificate.page = template.page_id if template and template.page_id is not None else settings.POK_PAGE_ID
             pok_certificate.receiver_email = receiver.get("email")
             pok_certificate.receiver_name = user_name
             pok_certificate.save()

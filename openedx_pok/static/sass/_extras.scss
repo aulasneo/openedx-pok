@@ -9,6 +9,7 @@ body {
   transition: background-color 0.8s ease-in-out;
   background-color: white;
   overflow-x: hidden;
+  margin: 0;
 }
 
 .header-section {
@@ -64,13 +65,6 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 5px 20px;
-
-  &:hover {
-    background-color: white;
-    color: #007bff;
-    border: 1px solid #007bff;
-    box-shadow: none;
-  }
 }
 
 .print-button {
@@ -86,17 +80,22 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
-  &:hover {
-    background-color: #007bff;
-    color: white;
-    border: 1px solid #007bff;
-    box-shadow: none;
-    transform: none;
-  }
 }
 
-// Responsive
+.boton-superior:hover {
+  background-color: white;
+  color: #007bff;
+  box-shadow: none;
+  border: 1px solid #007bff;
+}
+
+.print-button:hover {
+  background-color: #007bff;
+  color: white;
+  box-shadow: none;
+  border: 1px solid #007bff;
+}
+
 @media (max-width: 768px) {
   .header-content {
     justify-content: space-between;
@@ -122,10 +121,10 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: none;
     z-index: 999;
+  }
 
-    &.show {
-      display: flex;
-    }
+  .menu.show {
+    display: flex;
   }
 
   .print-button,
@@ -135,13 +134,14 @@ body {
     border: none;
     background-color: transparent;
     color: #007bff;
+  }
 
-    &:hover {
-      background-color: transparent;
-      color: #007bff;
-      box-shadow: none;
-      border: none;
-    }
+  .print-button:hover,
+  .boton-superior:hover {
+    background-color: transparent;
+    color: #007bff;
+    box-shadow: none;
+    border: none;
   }
 }
 
@@ -151,12 +151,11 @@ body {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  padding: 16px;
   margin: 0 auto;
 }
 
 .certificate-section-v2 {
-  margin-top: -89px;
+  margin-top: -30px;
   overflow: hidden;
 }
 
@@ -167,12 +166,10 @@ body {
   margin: 0 auto;
 }
 
-.iframe-container {
-  img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
+.iframe-container img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .iframe-container_v2 {
@@ -181,6 +178,10 @@ body {
   overflow: hidden;
   margin: 0;
   padding: 0;
+}
+
+.print-button:hover {
+  transform: none;
 }
 
 iframe {
@@ -194,3 +195,4 @@ iframe {
 footer {
   display: none;
 }
+

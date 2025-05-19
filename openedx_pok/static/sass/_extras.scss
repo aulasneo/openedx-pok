@@ -1,5 +1,3 @@
-// Variables
-
 // Reset
 * {
   margin: 0;
@@ -55,9 +53,9 @@ body {
 }
 
 .boton-superior {
-  background-color: $primary;
+  background-color: #007bff;
   color: white;
-  border: 1px solid $primary;
+  border: 1px solid #007bff;
   border-radius: 5px;
   font-size: 16px;
   cursor: pointer;
@@ -69,16 +67,16 @@ body {
 
   &:hover {
     background-color: white;
-    color: $primary;
+    color: #007bff;
+    border: 1px solid #007bff;
     box-shadow: none;
-    border: 1px solid $primary;
   }
 }
 
 .print-button {
   background-color: white;
-  color: $primary;
-  border: 1px solid $primary;
+  color: #007bff;
+  border: 1px solid #007bff;
   padding: 5px 20px;
   border-radius: 5px;
   font-size: 16px;
@@ -90,10 +88,10 @@ body {
   gap: 8px;
 
   &:hover {
-    background-color: $primary;
+    background-color: #007bff;
     color: white;
+    border: 1px solid #007bff;
     box-shadow: none;
-    border: 1px solid $primary;
     transform: none;
   }
 }
@@ -136,11 +134,11 @@ body {
     justify-content: flex-end;
     border: none;
     background-color: transparent;
-    color: $primary;
+    color: #007bff;
 
     &:hover {
       background-color: transparent;
-      color: $primary;
+      color: #007bff;
       box-shadow: none;
       border: none;
     }

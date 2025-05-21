@@ -54,9 +54,9 @@ body {
 }
 
 .boton-superior {
-  background-color: #007bff;
+  background: var(--primary);
   color: white;
-  border: 1px solid #007bff;
+  border: 1px solid var(--primary);
   border-radius: 5px;
   font-size: 16px;
   cursor: pointer;
@@ -65,12 +65,15 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 5px 20px;
+  -webkit-font-smoothing: none;
+  box-shadow: none;
+  text-shadow: none;
 }
 
 .print-button {
-  background-color: white;
-  color: #007bff;
-  border: 1px solid #007bff;
+  background: white;
+  color: var(--primary);
+  border: 1px solid var(--primary);
   padding: 5px 20px;
   border-radius: 5px;
   font-size: 16px;
@@ -80,21 +83,41 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  -webkit-font-smoothing: none;
+  box-shadow: none;
+  text-shadow: none;
 }
 
 .boton-superior:hover {
-  background-color: white;
-  color: #007bff;
+  background-color: white !important;
+  color: var(--primary);
   box-shadow: none;
-  border: 1px solid #007bff;
+  border: 1px solid var(--primary);
+  background-image: none !important;
 }
 
 .print-button:hover {
-  background-color: #007bff;
+  background: var(--primary);
   color: white;
   box-shadow: none;
-  border: 1px solid #007bff;
+  border: 1px solid var(--primary);
+  background-image: none !important;
 }
+
+input[type="submit"]:active:not(:disabled),
+input[type="submit"]:focus:not(:disabled),
+input[type="button"]:active:not(:disabled),
+input[type="button"]:focus:not(:disabled),
+button:active:not(:disabled),
+button:focus:not(:disabled),
+.button:active:not(:disabled),
+.button:focus:not(:disabled) {
+  box-shadow: none !important;
+}
+
+// input[type="submit"]:hover:not(:disabled), input[type="button"]:hover:not(:disabled), button:hover:not(:disabled), .button:hover:not(:disabled) {
+//   ;
+// }
 
 @media (max-width: 768px) {
   .header-content {
@@ -145,6 +168,10 @@ body {
   }
 }
 
+.certificate-section {
+  padding-top: 4rem;
+}
+
 .certificate-section,
 .certificate-section-v2 {
   display: flex;
@@ -155,7 +182,7 @@ body {
 }
 
 .certificate-section-v2 {
-  margin-top: -30px;
+  margin-top: -5.7rem;
   overflow: hidden;
 }
 
@@ -195,4 +222,3 @@ iframe {
 footer {
   display: none;
 }
-

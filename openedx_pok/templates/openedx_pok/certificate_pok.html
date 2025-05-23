@@ -266,6 +266,8 @@ footer {
   const hamburger = document.getElementById('hamburger');
   const menu = document.getElementById('menu');
 
+  const authoringUrl = "{{ authoring_microfrontend_url|escapejs }}";
+
   let isDetailsShown = false;
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -279,7 +281,18 @@ footer {
     if (window.innerWidth <= 768) {
       menu.classList.remove('show');
     }
-    history.back();
+    // Intenta volver atrás, si no hay historial, redirige a authoringUrl
+    if (window.history.length > 1) {
+      history.back();
+      setTimeout(() => {
+        // Si no cambia la URL después de 500ms, redirige manualmente
+        if (window.location.href === localStorage.getItem('lastVisited')) {
+          window.location.href = authoringUrl;
+        }
+      }, 500);
+    } else {
+      window.location.href = authoringUrl;
+    }
   });
 
   printButton.addEventListener('click', () => {

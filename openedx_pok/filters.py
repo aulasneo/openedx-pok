@@ -259,13 +259,16 @@ class CertificateRenderFilter(PipelineStep):
             image_content = response["content"].get("location")
             if not image_content:
                 raise Exception("Missing certificate image URL")
+            
+            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
 
             html = render_to_string("openedx_pok/certificate_pok.html", {
                 "document_title": context.get("document_title", "Certificate"),
                 "logo_src": context.get("logo_src", ""),
                 "accomplishment_copy_name": context.get("accomplishment_copy_name", "Student"),
                 "image_content": image_content,
-                "certificate_url": certificate.view_url
+                "certificate_url": certificate.view_url,
+                "authoring_microfrontend_url": f"{authoring_url}/course/{certificate.course_id}/certificates",
             })
 
             raise CertificateRenderStarted.RenderCustomResponse(

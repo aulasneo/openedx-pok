@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>{{ document_title|default:"Certificate Preview" }}</title>
+  <link rel="stylesheet" href="/static/theme/css/lms-main-v1.css" type="text/css" media="all">
+
   <style>
     * {
       box-sizing: border-box;
@@ -10,7 +13,8 @@
       padding: 0;
     }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       background-color: #f8f9fa;
       font-family: Arial, sans-serif;
@@ -29,63 +33,80 @@
       justify-content: space-between;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       align-items: center;
-  }
+    }
 
-  .boton-superior {
-    background-color: var(--primary);
-    color: white;
-    border: 1px solid var(--primary);
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 0;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 20px;
-  }
-  .boton-superior:hover {
-    background-color: white;
-    color: var(--primary);
-    box-shadow: none;
-    border: 1px solid var(--primary);
-  }
+    .boton-superior {
+      background: var(--primary);
+      color: white;
+      border: 1px solid var(--primary);
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 20px;
+      -webkit-font-smoothing: none;
+      box-shadow: none;
+      text-shadow: none;
+    }
 
-  .logo-container {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+    .boton-superior:hover {
+      background-color: white !important;
+      color: var(--primary);
+      box-shadow: none;
+      border: 1px solid var(--primary);
+      background-image: none !important;
+    }
 
-  .logo {
-    height: 30px;
-  }
+    .logo-container {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-  .image-container {
-    position: absolute;
-    top: 60px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
+    .logo {
+      height: 30px;
+    }
 
-  .image-container img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  }
+    .image-container {
+      position: absolute;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .image-container img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="submit"]:active:not(:disabled),
+    input[type="submit"]:focus:not(:disabled),
+    input[type="button"]:active:not(:disabled),
+    input[type="button"]:focus:not(:disabled),
+    button:active:not(:disabled),
+    button:focus:not(:disabled),
+    .button:active:not(:disabled),
+    .button:focus:not(:disabled) {
+      box-shadow: none !important;
+    }
   </style>
 </head>
+
 <body>
   <div class="header-section">
     <img src="{{ logo_src }}" alt="Logo" class="logo">
-    <button id="goBackBtn" class="boton-superior">Go back</button>
+    <button id="goBackBtn" class="boton-superior">Back</button>
   </div>
 
   <div class="image-container">
@@ -101,4 +122,5 @@
     });
   </script>
 </body>
+
 </html>

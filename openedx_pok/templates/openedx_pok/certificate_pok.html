@@ -1,7 +1,32 @@
 {% block content %}
 {% load static %}
 
-<link rel="stylesheet" href="/static/theme/css/lms-main-v1.css" type="text/css" media="all">
+{% if image_content and certificate_url %}
+<meta property="og:title" content="¡Mirá mi certificado!" />
+<meta property="og:description" content="Obtuve este certificado, ¡compartilo también!" />
+<meta property="og:image" content="{{ image_content }}" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="{{ certificate_url }}" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="¡Obtuve mi certificado '{{ course_title }}' en {{ platform_name }}!" />
+<meta property="og:url" content="{{ view_url }}" />
+
+<!-- Para Twitter (ahora X) -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="{{ image_content }}" />
+<meta name="twitter:title" content="¡Obtuve mi certificado '{{ course_title }}'!" />
+<meta name="twitter:description" content="Mirá mi certificado de finalización de curso en {{ platform_name }}." />
+{% endif %}
+
+<link rel="stylesheet" href="{% static 'theme/css/lms-main-v1.css' %}" type="text/css" media="all">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 
 <style>
   * {
@@ -14,14 +39,12 @@
     transition: background-color 0.8s ease-in-out;
     background-color: white;
     overflow-x: hidden;
-    margin: 0;
   }
 
   .header-section {
     position: sticky;
     top: 0;
     width: 100%;
-    padding: 0;
     background-color: white;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -60,52 +83,21 @@
 
   .boton-superior {
     background: var(--primary);
-    color: white;
+    color: white !important;
     border: 1px solid var(--primary);
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
-    margin: 0;
+    padding: 5px 20px;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
-    padding: 5px 20px;
-    -webkit-font-smoothing: none;
-    box-shadow: none;
-    text-shadow: none;
-  }
-
-  .print-button {
-    background: white;
-    color: var(--primary);
-    border: 1px solid var(--primary);
-    padding: 5px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 0;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    -webkit-font-smoothing: none;
-    box-shadow: none;
-    text-shadow: none;
   }
 
   .boton-superior:hover {
     background-color: white !important;
     color: var(--primary);
-    box-shadow: none;
     border: 1px solid var(--primary);
-    background-image: none !important;
-  }
-
-  .print-button:hover {
-    background: var(--primary);
-    color: white;
-    box-shadow: none;
-    border: 1px solid var(--primary);
-    background-image: none !important;
   }
 
   input[type="submit"]:active:not(:disabled),
@@ -119,11 +111,64 @@
     box-shadow: none !important;
   }
 
-  @media (max-width: 768px) {
-    .header-content {
-      justify-content: space-between;
-    }
+  .certificate-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+  }
 
+  .certificate-section {
+    padding-top: 5px;
+  }
+
+  .iframe-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .iframe-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  footer {
+    display: none;
+  }
+
+  .social-sharing {
+    background: var(--gray-l4);
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    line-height: 1.2;
+  }
+
+  .social-sharing span {
+    font-size: 20px;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .link-pok {
+    margin-top: 1rem;
+    font-size: 15px !important;
+  }
+
+  .share {
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
     .logo-container {
       position: static;
       transform: none;
@@ -143,78 +188,15 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       display: none;
       z-index: 999;
+      gap: 0;
     }
 
     .menu.show {
       display: flex;
     }
 
-    .print-button,
     .boton-superior {
-      width: 100%;
-      justify-content: flex-end;
-      border: none;
-      background-color: transparent;
-      color: var(--primary);
-    }
-
-    .print-button:hover,
-    .boton-superior:hover {
-      background-color: transparent;
-      color: var(--primary);
-      box-shadow: none;
-      border: none;
-    }
-  }
-
-  .certificate-section {
-    padding-top: 4rem;
-  }
-
-  .certificate-section,
-  .certificate-section-v2 {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin: 0 auto;
-  }
-
-  .certificate-section-v2 {
-    margin-top: -5.7rem;
-    overflow: hidden;
-  }
-
-  .iframe-container,
-  .iframe-container_v2 {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
-  .iframe-container img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .iframe-container_v2 {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-  }
-
-  .print-button:hover {
-    transform: none;
-  }
-
-  @media (max-width: 768px) {
-
-    .print-button:hover,
-    .boton-superior:hover {
-      background-color: var(--gray-l4) !important;
+      background-color: white !important;
       color: var(--primary) !important;
       box-shadow: none !important;
       border: none !important;
@@ -224,21 +206,15 @@
       border-radius: 0;
     }
 
-    .menu {
-      gap: 0;
+    .boton-superior:hover {
+      color: var(--primary);
+      box-shadow: none;
     }
-  }
 
-  iframe {
-    width: 100vw;
-    height: calc(100vh - 77px);
-    border: none;
-    display: block;
-    margin-top: 30px;
-  }
-
-  footer {
-    display: none;
+    .social-sharing {
+      height: auto !important;
+      flex-direction: column;
+    }
   }
 </style>
 
@@ -249,58 +225,85 @@
         <img src="{{ logo_src }}" alt="Logo" class="logo">
       </a>
     </div>
-
     <div class="menu" id="menu">
-      <button id="printButton" class="print-button">
-        <i class="fas fa-file-alt"></i> Certificate Details
-      </button>
       <button id="botonToggle" class="boton-superior">Back</button>
     </div>
-
     <div class="hamburger" id="hamburger">&#9776;</div>
   </div>
 </section>
 
-<section class="certificate-section">
-  <div id="previewFrame" class="iframe-container">
-    <img src="{{ image_content }}" alt="Certificate">
+<section>
+  <div class="social-sharing">
+    <div>Congratulations! You did it! Share it with your family, friends, and colleagues on your social and professional
+      networks.</div>
+
+    <div class="social-links">
+      <a href="{{ social_links.twitter }}" class="share" target="_blank" rel="noopener noreferrer">
+        <span class="icon fab fa-x-twitter"></span>
+      </a>
+
+      <a href="{{ social_links.facebook }}" class="share" target="_blank" rel="noopener noreferrer">
+        <span class="icon fab fa-facebook"></span>
+      </a>
+
+      <a href="{{ social_links.linkedin }}" class="share" target="_blank" rel="noopener noreferrer">
+        <span class="icon fab fa-linkedin"></span>
+      </a>
+
+      <!-- <a class="share" id="downloadPdfBtn"><i class=" fas fa-download"></i></a> -->
+    </div>
+
   </div>
+
 </section>
 
-<section class="certificate-section-v2">
-  <div id="detailsFrame" style="display: none;">
-    <iframe src="{{ certificate_url }}"></iframe>
+<section id="section-v1" class="certificate-section">
+  <div id="previewFrame" class="iframe-container">
+    <img id="certImage" src="{{ image_content }}" alt="Certificate">
   </div>
+  <a class="link-pok" href="{{ certificate_url }}" target="_blank">View Certificate in Pok</a>
 </section>
+
+<!-- <script>
+  document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+    const { jsPDF } = window.jspdf;
+    const img = document.getElementById('certImage');
+
+    if (!img.complete) {
+      img.onload = () => generarPDF(img);
+    } else {
+      generarPDF(img);
+    }
+    function generarPDF(imagen) {
+      html2canvas(imagen, { useCORS: true }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'landscape',
+          unit: 'pt',
+          format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save('certificado.pdf');
+      });
+    }
+  });
+</script> -->
 
 <script>
   const boton = document.getElementById('botonToggle');
-  const printButton = document.getElementById('printButton');
-  const previewFrame = document.getElementById('previewFrame');
-  const detailsFrame = document.getElementById('detailsFrame');
   const hamburger = document.getElementById('hamburger');
   const menu = document.getElementById('menu');
-
+  const sectionV1 = document.getElementById('section-v1');
   const authoringUrl = "{{ authoring_microfrontend_url|escapejs }}";
-
-  let isDetailsShown = false;
-
-  window.addEventListener('DOMContentLoaded', () => {
-    previewFrame.style.display = 'block';
-    detailsFrame.style.display = 'none';
-    printButton.innerHTML = '<i class="fas fa-file-alt"></i> Certificate Details';
-    localStorage.setItem('lastVisited', window.location.href);
-  });
 
   boton.addEventListener('click', () => {
     if (window.innerWidth <= 768) {
       menu.classList.remove('show');
     }
-    // Intenta volver atrás, si no hay historial, redirige a authoringUrl
+
     if (window.history.length > 1) {
       history.back();
       setTimeout(() => {
-        // Si no cambia la URL después de 500ms, redirige manualmente
         if (window.location.href === localStorage.getItem('lastVisited')) {
           window.location.href = authoringUrl;
         }
@@ -310,26 +313,10 @@
     }
   });
 
-  printButton.addEventListener('click', () => {
-    if (isDetailsShown) {
-      previewFrame.style.display = 'block';
-      detailsFrame.style.display = 'none';
-      printButton.innerHTML = 'Certificate Details';
-    } else {
-      previewFrame.style.display = 'none';
-      detailsFrame.style.display = 'block';
-      printButton.innerHTML = 'Certificate Summary';
-    }
-
-    if (window.innerWidth <= 768) {
-      menu.classList.remove('show');
-    }
-
-    isDetailsShown = !isDetailsShown;
-  });
-
   hamburger.addEventListener('click', () => {
     menu.classList.toggle('show');
   });
+
 </script>
+
 {% endblock %}

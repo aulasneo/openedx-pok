@@ -4,11 +4,14 @@ POK certificate filter implementations.
 
 import json
 import logging
+import six
 
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from urllib.parse import quote
+from django.urls import reverse
 
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.courses import get_course_by_id
@@ -63,7 +66,18 @@ def _get_org_name(course_key):
         return organizations[0].get('name', organizations[0].get('short_name'))
     return ""
 
+def build_social_links(view_url, image_content, course_title, platform_name, twitter_account=None):
+    """
+    Build social share links using the certificate view_url and image_content.
+    """
+    tweet_text = f"¡Obtuve mi certificado '{course_title}' en {platform_name}! {image_content}"
 
+    return {
+        'facebook': f"https://www.facebook.com/sharer/sharer.php?u={quote(image_content)}",
+        'linkedin': f"https://www.linkedin.com/sharing/share-offsite/?url={quote(image_content)}",
+        'twitter': f"https://twitter.com/intent/tweet?text={quote(tweet_text)}",
+        'image_content': image_content
+    }
 
 # === Certificate Creation Filter ===
 
@@ -228,6 +242,7 @@ class CertificateRenderFilter(PipelineStep):
         Determines the current certificate state and routes rendering accordingly.
         Supports 'emitted' and 'processing' states, or shows an error if no cert is found.
         """
+
         try:
             certificate = PokCertificate.objects.filter(user_id=user_id, course_id=course_id).first()
             if not certificate:
@@ -251,6 +266,7 @@ class CertificateRenderFilter(PipelineStep):
         Renders the final issued certificate with full image and metadata.
         Uses decrypted data from the POK API.
         """
+
         try:
             response = client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
             if not response.get("success"):
@@ -261,6 +277,14 @@ class CertificateRenderFilter(PipelineStep):
                 raise Exception("Missing certificate image URL")
             
             authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
+            
+            social_links = build_social_links(
+                view_url=certificate.view_url,
+                course_title=certificate.title,
+                platform_name=getattr(settings, 'PLATFORM_NAME', ''),
+                twitter_account=getattr(settings, 'PLATFORM_TWITTER_ACCOUNT', None),
+                image_content=image_content
+            )
 
             html = render_to_string("openedx_pok/certificate_pok.html", {
                 "document_title": context.get("document_title", "Certificate"),
@@ -269,6 +293,7 @@ class CertificateRenderFilter(PipelineStep):
                 "image_content": image_content,
                 "certificate_url": certificate.view_url,
                 "authoring_microfrontend_url": f"{authoring_url}/course/{certificate.course_id}/certificates",
+                "social_links": social_links,
             })
 
             raise CertificateRenderStarted.RenderCustomResponse(

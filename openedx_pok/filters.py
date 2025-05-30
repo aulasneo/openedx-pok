@@ -2,9 +2,7 @@
 POK certificate filter implementations.
 """
 
-import json
 import logging
-import six
 
 from django.http import HttpResponse
 from django.template.loader import render_to_string

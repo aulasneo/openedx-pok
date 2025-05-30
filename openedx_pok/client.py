@@ -28,7 +28,8 @@ class PokApiClient:
         except CertificateTemplate.DoesNotExist:
             template = None
 
-        self.api_key =  settings.POK_API_KEY
+        #self.api_key =  settings.POK_API_KEY
+        self.api_key =  "d4769662-7173-4162-8bf6-ae175ed02076"
         self.template = template.template_id if template else settings.POK_TEMPLATE_ID
         self.emission_type = template.emission_type if template else "pok"
         self.page = template.page_id if template and template.page_id is not None else settings.POK_PAGE_ID
@@ -201,6 +202,7 @@ class PokApiClient:
         endpoint = urljoin(self.base_url, f'credential/{certificate_id}/')
 
         if decrypted:
+            logger.info(f"Fetching decrypted credential details for ID: {certificate_id}")
             endpoint = urljoin(endpoint, "decrypted-image/")
 
         try:

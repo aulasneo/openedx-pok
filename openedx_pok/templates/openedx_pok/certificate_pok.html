@@ -2,16 +2,14 @@
 {% load static %}
 
 {% if image_content and certificate_url %}
-<meta property="og:title" content="¡Mirá mi certificado!" />
 <meta property="og:description" content="Obtuve este certificado, ¡compartilo también!" />
-<meta property="og:image" content="{{ image_content }}" />
+<meta property="og:image" content="{{ image_content }}" crossorigin="anonymous"/>
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="{{ certificate_url }}" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="¡Obtuve mi certificado '{{ course_title }}' en {{ platform_name }}!" />
-<meta property="og:url" content="{{ view_url }}" />
 
 <!-- Para Twitter (ahora X) -->
 <meta name="twitter:card" content="summary_large_image" />
@@ -26,7 +24,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 
 <style>
   * {
@@ -216,6 +213,134 @@
       flex-direction: column;
     }
   }
+
+  /* //modal  */
+
+  #modal_overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  #modal {
+    display: flex;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    background: #ffffff;
+    padding: 20px;
+    flex-direction: column;
+  }
+
+  .butonCancelModal {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: black;
+    border: none;
+    box-shadow: none;
+    font-size: 1rem;
+  }
+
+  .butonCancelModal:hover {
+    background: none !important;
+  }
+
+  .MuiPaper-root {
+    padding: 32px 32px 0px;
+    border-radius: 16px;
+    max-width: 500px;
+  }
+
+  .css-8azq84 {
+    height: 100%;
+    outline: 0px;
+    display: flex;
+    -webkit-box-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .css-amfkon {
+    margin: 0px;
+    color: rgb(30, 30, 30);
+    font-size: 24px;
+    font-family: Poppins;
+    font-weight: 700;
+    line-height: 1.167;
+  }
+
+  .css-1b07nng {
+    font: inherit;
+    font-size: 14px;
+    letter-spacing: inherit;
+    color: currentcolor;
+    border: 0px;
+    box-sizing: content-box;
+    background: none;
+    margin: 0px;
+    -webkit-tap-highlight-color: transparent;
+    display: block;
+    min-width: 0px;
+    width: 100%;
+    animation-name: mui-auto-fill-cancel;
+    animation-duration: 10ms;
+    height: auto;
+    resize: none;
+    padding: 0px;
+    line-height: 2;
+  }
+
+  .css-unux02 {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: rgb(58, 67, 78);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .css-1v2tvb4 {
+    margin: 0px;
+    color: rgb(255, 255, 255);
+    font-size: 1rem;
+    padding: 2%;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .css-sb40dm {
+    display: flex;
+    flex-direction: row;
+    -webkit-box-pack: center;
+    justify-content: center;
+    padding-top: 16px;
+  }
+
+  .MuiStack-root {
+    margin-top: 4px !important;
+  }
+
+  .css-wnpqyk {
+    margin: 0px 0px 0px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: Poppins;
+    color: rgb(84, 140, 255);
+  }
 </style>
 
 <section class="header-section">
@@ -246,16 +371,73 @@
         <span class="icon fab fa-facebook"></span>
       </a>
 
-      <a href="{{ social_links.linkedin }}" class="share" target="_blank" rel="noopener noreferrer">
+      <a class="share" id="linkedinShareBtn" rel="noopener noreferrer">
         <span class="icon fab fa-linkedin"></span>
       </a>
 
       <!-- <a class="share" id="downloadPdfBtn"><i class=" fas fa-download"></i></a> -->
     </div>
-
   </div>
-
 </section>
+
+<div id="modal_overlay">
+  <section id="modal">
+    <button class="butonCancelModal" id="cancelShare">X</button>
+    <div class="MuiPaper-root MuiDialog-container MuiDialog-scrollPaper css-8azq84" role="dialog" aria-labelledby=":r8:"
+      aria-modal="true"
+      style="--Paper-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2),0px 24px 38px 3px rgba(0,0,0,0.14),0px 9px 46px 8px rgba(0,0,0,0.12);">
+      <h2 class="MuiTypography-root MuiTypography-h6 MuiDialogTitle-root css-11b89pq" id=":r8:">
+        <span class="MuiTypography-root MuiTypography-h3 css-amfkon">Crear publicación en LinkedIn</span>
+      </h2>
+      <div class="MuiDialogContent-root css-1nbx5hx">
+        <span
+          class="MuiTypography-root MuiDialogContentText-root MuiTypography-body1 MuiDialogContentText-root css-wr5c52">
+
+          <div class="MuiStack-root css-jj2ztu">
+            <div class="MuiInputBase-root MuiInputBase-colorPrimary MuiInputBase-multiline css-m7bnyg"><textarea
+                placeholder="¿Sobre qué quieres hablar?" aria-label=""
+                class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng"
+                style="height: 69px; overflow: hidden;">¡Feliz de obtener mi credencial como Certificate de Aulasneo! 🎉🎓 
+                  #POK #DigitalCredentials #Aulasneo 🌐✨</textarea><textarea aria-hidden="true"
+                class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng" readonly="" tabindex="-1"
+                style="visibility: hidden; position: absolute; overflow: hidden; height: 0px; top: 0px; left: 0px; transform: translateZ(0px); padding-top: 0px; padding-bottom: 0px; width: 452px;"></textarea>
+            </div>
+          </div>
+          <div class="MuiStack-root no-margin-stack css-1fe818t">
+            <div class="MuiStack-root no-margin-stack css-1ohi3s7"><img
+                style="border-top-left-radius: 8px; border-top-right-radius: 8px; width: 100%;"
+                src="{{ image_content }}">
+            </div>
+          </div>
+          <div class="MuiStack-root no-margin-stack css-unux02">
+            <span class="MuiTypography-root MuiTypography-shareTitle css-1v2tvb4">
+              <div class="MuiBox-root css-1hb97yd">Recibí la credencial de Certificate emitida por Aulasneo</div>
+          </div>
+          <div class="MuiStack-root css-sb40dm">
+            <button id="linkedinCustomShareBtn"
+              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-37japd"
+              tabindex="0" type="button" style="font-weight: 500; font-size: 1rem;"><img
+                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFySURBVHgB7deNTcMwEAXgV8QAjBAmgBHCBmzQdoMyAR0BJiAjsEGyQbsBYQKyQXimRooibFo7ldz4fdIpjX2V6mv8E0BEREREREREJEDf9yWjZnz1B+bzCjkwA+3dHjF3HOTOU4AdErdAJDNKX/+CkLArxGsD++aBD8DGMwVWyIFdCD+Gc98UBrnhoG9MQC7HFLuA+cdd/3rHTaALzC15uWfc2aZPxp4570gJf2jlWQS3o9ytJ/fN5pSj9WTM9D1jIlNsg5PhwJa81IzCk2b6TCHrKdablApQMKoT8ktG9JOQUgFKnG5j14pgSU2BgZbR4LiTZNQLV2oFMLvAA1f6W8bPlfdr2+6yRITUCrDmoJthA+8rXl493zGHrwKBUipA49njX+AXvBukVIDW1WEPSL5pMIsC/KfDGVxSAc5CBUDmVABkTgVA5lQAZC77AlwjXoXDu/tf9qN787LTOnJd7b+e4D7ztxARERERERERkeN8A1EmMkXByhwxAAAAAElFTkSuQmCC"
+                alt="linkedin" style="width: 24px; height: 24px;">Compartir como publicación<span
+                class="MuiTouchRipple-root css-4mb1j7"></span>
+            </button>
+          </div>
+          <div class="MuiStack-root css-sb40dm"><a
+              href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;organizationName=Aulasneo&amp;name=Certificate&amp;certUrl={{image_content}}&amp;certId=&amp;issueYear=2025&amp;issueMonth=5"
+              target="_blank" title="" rel="noreferrer"
+              style="text-decoration: none; padding: 6px 16px; border-radius: 4px; background: rgb(255, 255, 255); cursor: pointer;">
+              <div class="MuiStack-root css-1hyoz7m">
+                <span class="MuiTypography-root MuiTypography-bodyMenu css-wnpqyk">Agregar a mi perfil de
+                  LinkedIn</span>
+              </div>
+            </a>
+          </div>
+        </span>
+      </div>
+      <div class="MuiDialogActions-root MuiDialogActions-spacing css-1batjdu"></div>
+    </div>
+  </section>
+</div>
 
 <section id="section-v1" class="certificate-section">
   <div id="previewFrame" class="iframe-container">
@@ -264,31 +446,68 @@
   <a class="link-pok" href="{{ certificate_url }}" target="_blank">View Certificate in Pok</a>
 </section>
 
+<!-- Script para transformar certificado en JPG -->
 <!-- <script>
   document.getElementById('downloadPdfBtn').addEventListener('click', function () {
-    const { jsPDF } = window.jspdf;
     const img = document.getElementById('certImage');
 
     if (!img.complete) {
-      img.onload = () => generarPDF(img);
+      img.onload = () => generarJPG(img);
     } else {
-      generarPDF(img);
+      generarJPG(img);
     }
-    function generarPDF(imagen) {
-      html2canvas(imagen, { useCORS: true }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'landscape',
-          unit: 'pt',
-          format: [canvas.width, canvas.height]
-        });
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save('certificado.pdf');
+
+    function generarJPG(imagen) {
+      html2canvas(imagen, {
+        useCORS: true,
+        allowTaint: false
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'certificado.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch(error => {
+        console.error('Error generando imagen:', error);
       });
     }
   });
 </script> -->
 
+<!-- Script para el modal de Linkedin -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const linkedinBtn = document.getElementById('linkedinShareBtn');
+    const modal = document.getElementById('modal_overlay');
+    const cancelShare = document.getElementById('cancelShare');
+
+    linkedinBtn.addEventListener('click', function (event) {
+      event.preventDefault();
+      if (modal) {
+        modal_overlay.style.display = 'block';
+      }
+    });
+    cancelShare.addEventListener('click', function () {
+      modal.style.display = 'none';
+    });
+  });
+</script>
+
+<!-- Script para compartir en Linkedin -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const linkedinShareBtn = document.getElementById('linkedinCustomShareBtn');
+    const linkedinUrl = '{{ social_links.linkedin }}';
+
+    linkedinShareBtn.addEventListener('click', function () {
+      window.open(linkedinUrl, '_blank');
+    });
+  });
+</script>
+
+<!-- Script para el menu -->
 <script>
   const boton = document.getElementById('botonToggle');
   const hamburger = document.getElementById('hamburger');
@@ -316,7 +535,6 @@
   hamburger.addEventListener('click', () => {
     menu.classList.toggle('show');
   });
-
 </script>
 
 {% endblock %}

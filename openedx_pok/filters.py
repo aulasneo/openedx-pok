@@ -293,7 +293,7 @@ class CertificateRenderFilter(PipelineStep):
                 "authoring_microfrontend_url": f"{authoring_url}/course/{certificate.course_id}/certificates",
                 "social_links": social_links,
                 "user_id": user_id,
-                "course_id": certificate.course_id,
+                "course_id": certificate.course_id
             })
 
             raise CertificateRenderStarted.RenderCustomResponse(

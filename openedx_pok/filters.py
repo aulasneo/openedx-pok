@@ -15,6 +15,7 @@ from django.urls import reverse
 
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.courses import get_course_by_id
+from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
 from organizations import api as organizations_api
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import (
@@ -25,6 +26,26 @@ from .models import CertificateTemplate, PokCertificate
 from .client import PokApiClient
 
 logger = logging.getLogger(__name__)
+
+# .. toggle_name: module_pok.enable
+# .. toggle_implementation: CourseWaffleFlag
+# .. toggle_description: Enables use of the module_pok plugin for Open edX.
+# .. toggle_default: False
+# .. toggle_use_cases: opt_in
+# .. toggle_creation_date: 2024-04-03
+# .. toggle_expiration_date: 2025-08-12
+# .. toggle_will_remain_in_codebase: True
+# .. toggle_tickets: none
+# .. toggle_status: supported
+ENABLE_POK_COURSE_FLAG = CourseWaffleFlag('module_pok.enable', __name__)
+
+# Check if the POK module is enabled for the course
+def is_pok_enabled(course_key: CourseKey | None = None) -> bool:
+    """
+    Returns True if the POK module is enabled for the given course.
+    """
+    return ENABLE_POK_COURSE_FLAG.is_enabled(course_key)
+
 
 # === Helper Functions ===
 
@@ -94,6 +115,9 @@ class CertificateCreatedFilter(PipelineStep):
         - If not, requests one via POK API.
         - Stores metadata returned by the API into the PokCertificate model.
         """
+        if not is_pok_enabled(kwargs.get("course_key")):
+            logger.info("[POK] POK module is not enabled for this course, skipping certificate creation.")
+            return
 
         user = kwargs.get("user")
         course_key = kwargs.get("course_key")
@@ -178,9 +202,14 @@ class CertificateRenderFilter(PipelineStep):
         Entry point for the filter.
         Determines whether to show a preview (for unissued certs) or render an issued certificate.
         """
+        course_id = context.get("course_id")
+        course_key = CourseKey.from_string(course_id)
+        
+        if not is_pok_enabled(course_key):
+            logger.info("[POK] POK module is not enabled for this course, skipping certificate rendering.")
+            return 
         
         user_id = context.get("accomplishment_user_id")
-        course_id = context.get("course_id")
 
         if not user_id or not course_id:
             logger.warning("[POK] Missing user_id or course_id in render context")

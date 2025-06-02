@@ -3,7 +3,7 @@
 
 {% if image_content and certificate_url %}
 <meta property="og:description" content="Obtuve este certificado, ¡compartilo también!" />
-<meta property="og:image" content="{{ image_content }}" crossorigin="anonymous"/>
+<meta property="og:image" content="{{ image_content }}" crossorigin="anonymous" />
 <meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -21,9 +21,6 @@
 <link rel="stylesheet" href="{% static 'theme/css/lms-main-v1.css' %}" type="text/css" media="all">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
   integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
   * {
@@ -271,6 +268,28 @@
     -webkit-box-align: center;
     align-items: center;
     flex-direction: column;
+    --Paper-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .css-m7bnyg {
+    height: 69px;
+    overflow: hidden;
+  }
+
+  .css-1ohi3s7 img {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    width: 100%;
+  }
+
+  .css-37japd {
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  .css-37japd img {
+    width: 24px;
+    height: 24px;
   }
 
   .css-amfkon {
@@ -330,6 +349,14 @@
     padding-top: 16px;
   }
 
+  .css-1b07nng a {
+    text-decoration: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    background: rgb(255, 255, 255);
+    cursor: pointer;
+  }
+
   .MuiStack-root {
     margin-top: 4px !important;
   }
@@ -360,32 +387,47 @@
 <section>
   <div class="social-sharing">
     <div>Congratulations! You did it! Share it with your family, friends, and colleagues on your social and professional
-      networks.</div>
+      networks.
+    </div>
 
     <div class="social-links">
-      <a href="{{ social_links.twitter }}" class="share" target="_blank" rel="noopener noreferrer">
+      <a href="{{ social_links.twitter }}" class="share" target="_blank" rel="noopener noreferrer"
+        title="Compartir en Twitter">
         <span class="icon fab fa-x-twitter"></span>
       </a>
 
-      <a href="{{ social_links.facebook }}" class="share" target="_blank" rel="noopener noreferrer">
+      <a href="{{ social_links.facebook }}" class="share" target="_blank" rel="noopener noreferrer"
+        title="Compartir en Facebook">
         <span class="icon fab fa-facebook"></span>
       </a>
 
-      <a class="share" id="linkedinShareBtn" rel="noopener noreferrer">
+      <a class="share" id="linkedinShareBtn" rel="noopener noreferrer" title="Compartir en LinkedIn">
         <span class="icon fab fa-linkedin"></span>
       </a>
 
-      <!-- <a class="share" id="downloadPdfBtn"><i class=" fas fa-download"></i></a> -->
+      <a href="{{ lms_base_url }}/api/pok/certificate?course_id={{ course_id }}&user_id={{ user_id }}"
+        class="share" id="downloadPdfBtn" title="Descargar certificado">
+        <i class="fas fa-download"></i>
+      </a>
     </div>
+
   </div>
 </section>
+
+<section id="section-v1" class="certificate-section">
+  <div id="previewFrame" class="iframe-container">
+    <img id="certImage" src="{{ image_content }}" alt="Certificate">
+  </div>
+  <a class="link-pok" href="{{ certificate_url }}" target="_blank">View Certificate in Pok</a>
+</section>
+
+<!-- Modal de Linkedin -->
 
 <div id="modal_overlay">
   <section id="modal">
     <button class="butonCancelModal" id="cancelShare">X</button>
     <div class="MuiPaper-root MuiDialog-container MuiDialog-scrollPaper css-8azq84" role="dialog" aria-labelledby=":r8:"
-      aria-modal="true"
-      style="--Paper-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2),0px 24px 38px 3px rgba(0,0,0,0.14),0px 9px 46px 8px rgba(0,0,0,0.12);">
+      aria-modal="true">
       <h2 class="MuiTypography-root MuiTypography-h6 MuiDialogTitle-root css-11b89pq" id=":r8:">
         <span class="MuiTypography-root MuiTypography-h3 css-amfkon">Crear publicación en LinkedIn</span>
       </h2>
@@ -394,19 +436,18 @@
           class="MuiTypography-root MuiDialogContentText-root MuiTypography-body1 MuiDialogContentText-root css-wr5c52">
 
           <div class="MuiStack-root css-jj2ztu">
-            <div class="MuiInputBase-root MuiInputBase-colorPrimary MuiInputBase-multiline css-m7bnyg"><textarea
-                placeholder="¿Sobre qué quieres hablar?" aria-label=""
-                class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng"
-                style="height: 69px; overflow: hidden;">¡Feliz de obtener mi credencial como Certificate de Aulasneo! 🎉🎓 
-                  #POK #DigitalCredentials #Aulasneo 🌐✨</textarea><textarea aria-hidden="true"
-                class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng" readonly="" tabindex="-1"
-                style="visibility: hidden; position: absolute; overflow: hidden; height: 0px; top: 0px; left: 0px; transform: translateZ(0px); padding-top: 0px; padding-bottom: 0px; width: 452px;"></textarea>
+            <div class="MuiInputBase-root MuiInputBase-colorPrimary MuiInputBase-multiline css-m7bnyg">
+              <textarea placeholder="¿Sobre qué quieres hablar?" aria-label=""
+                class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng">¡Feliz de obtener mi credencial como Certificate de Aulasneo! 🎉🎓
+                  #POK #DigitalCredentials #Aulasneo 🌐✨</textarea>
+              <textarea aria-hidden="true" class="MuiInputBase-input MuiInputBase-inputMultiline css-1b07nng"
+                readonly="" tabindex="-1">
+              </textarea>
             </div>
           </div>
           <div class="MuiStack-root no-margin-stack css-1fe818t">
-            <div class="MuiStack-root no-margin-stack css-1ohi3s7"><img
-                style="border-top-left-radius: 8px; border-top-right-radius: 8px; width: 100%;"
-                src="{{ image_content }}">
+            <div class="MuiStack-root no-margin-stack css-1ohi3s7">
+              <img src="{{ image_content }}">
             </div>
           </div>
           <div class="MuiStack-root no-margin-stack css-unux02">
@@ -416,16 +457,16 @@
           <div class="MuiStack-root css-sb40dm">
             <button id="linkedinCustomShareBtn"
               class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-37japd"
-              tabindex="0" type="button" style="font-weight: 500; font-size: 1rem;"><img
+              tabindex="0" type="button">
+              <img
                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFySURBVHgB7deNTcMwEAXgV8QAjBAmgBHCBmzQdoMyAR0BJiAjsEGyQbsBYQKyQXimRooibFo7ldz4fdIpjX2V6mv8E0BEREREREREJEDf9yWjZnz1B+bzCjkwA+3dHjF3HOTOU4AdErdAJDNKX/+CkLArxGsD++aBD8DGMwVWyIFdCD+Gc98UBrnhoG9MQC7HFLuA+cdd/3rHTaALzC15uWfc2aZPxp4570gJf2jlWQS3o9ytJ/fN5pSj9WTM9D1jIlNsg5PhwJa81IzCk2b6TCHrKdablApQMKoT8ktG9JOQUgFKnG5j14pgSU2BgZbR4LiTZNQLV2oFMLvAA1f6W8bPlfdr2+6yRITUCrDmoJthA+8rXl493zGHrwKBUipA49njX+AXvBukVIDW1WEPSL5pMIsC/KfDGVxSAc5CBUDmVABkTgVA5lQAZC77AlwjXoXDu/tf9qN787LTOnJd7b+e4D7ztxARERERERERkeN8A1EmMkXByhwxAAAAAElFTkSuQmCC"
-                alt="linkedin" style="width: 24px; height: 24px;">Compartir como publicación<span
-                class="MuiTouchRipple-root css-4mb1j7"></span>
+                alt="linkedin">Compartir como publicación<span class="MuiTouchRipple-root css-4mb1j7"></span>
             </button>
           </div>
-          <div class="MuiStack-root css-sb40dm"><a
-              href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;organizationName=Aulasneo&amp;name=Certificate&amp;certUrl={{image_content}}&amp;certId=&amp;issueYear=2025&amp;issueMonth=5"
-              target="_blank" title="" rel="noreferrer"
-              style="text-decoration: none; padding: 6px 16px; border-radius: 4px; background: rgb(255, 255, 255); cursor: pointer;">
+          <div class="MuiStack-root css-sb40dm">
+            <a href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&amp;organizationName=Aulasneo&amp;name=Certificate&amp;certUrl={{image_content}}&amp;certId=&amp;issueYear=2025&amp;issueMonth=5"
+              target="_blank" title="" rel="noreferrer">
+
               <div class="MuiStack-root css-1hyoz7m">
                 <span class="MuiTypography-root MuiTypography-bodyMenu css-wnpqyk">Agregar a mi perfil de
                   LinkedIn</span>
@@ -438,43 +479,6 @@
     </div>
   </section>
 </div>
-
-<section id="section-v1" class="certificate-section">
-  <div id="previewFrame" class="iframe-container">
-    <img id="certImage" src="{{ image_content }}" alt="Certificate">
-  </div>
-  <a class="link-pok" href="{{ certificate_url }}" target="_blank">View Certificate in Pok</a>
-</section>
-
-<!-- Script para transformar certificado en JPG -->
-<!-- <script>
-  document.getElementById('downloadPdfBtn').addEventListener('click', function () {
-    const img = document.getElementById('certImage');
-
-    if (!img.complete) {
-      img.onload = () => generarJPG(img);
-    } else {
-      generarJPG(img);
-    }
-
-    function generarJPG(imagen) {
-      html2canvas(imagen, {
-        useCORS: true,
-        allowTaint: false
-      }).then(canvas => {
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        const link = document.createElement('a');
-        link.href = imgData;
-        link.download = 'certificado.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }).catch(error => {
-        console.error('Error generando imagen:', error);
-      });
-    }
-  });
-</script> -->
 
 <!-- Script para el modal de Linkedin -->
 <script>

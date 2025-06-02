@@ -278,7 +278,7 @@ class CertificateRenderFilter(PipelineStep):
                 raise ValueError("No certificate record found")
 
             if certificate.state == "emitted":
-                return self._render_emitted_certificate(context, certificate, client)
+                return self._render_emitted_certificate(context, certificate, user_id, client)
             elif certificate.state == "processing":
                 return self._render_processing_certificate(context, certificate, client)
             else:
@@ -290,7 +290,7 @@ class CertificateRenderFilter(PipelineStep):
             logger.exception("[POK] Error rendering issued certificate: %s", str(e))
             return self._render_error_page(context, str(e), course_id, user_id)
 
-    def _render_emitted_certificate(self, context, certificate, client):
+    def _render_emitted_certificate(self, context, certificate, user_id, client):
         """
         Renders the final issued certificate with full image and metadata.
         Uses decrypted data from the POK API.
@@ -307,6 +307,10 @@ class CertificateRenderFilter(PipelineStep):
             
             authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
             
+            mfe_config = getattr(settings, "MFE_CONFIG", None)
+            lms_base_url = mfe_config.get("LMS_BASE_URL")
+
+
             social_links = build_social_links(
                 view_url=certificate.view_url,
                 course_title=certificate.title,
@@ -323,6 +327,9 @@ class CertificateRenderFilter(PipelineStep):
                 "certificate_url": certificate.view_url,
                 "authoring_microfrontend_url": f"{authoring_url}/course/{certificate.course_id}/certificates",
                 "social_links": social_links,
+                "user_id": user_id,
+                "course_id": certificate.course_id,
+                "lms_base_url": lms_base_url,
             })
 
             raise CertificateRenderStarted.RenderCustomResponse(

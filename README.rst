@@ -89,7 +89,10 @@ python manage.py migrate openedx_pok
 Support
 *******
 
-If you encounter issues or have questions, you can open an issue in this repository or join discussions in the Open edX community.
+This Open edX plugin was developed by Aulasneo. Feel free to reach out to us if you need a custom version of it.
+Also, If you encounter issues or have questions, you can open an issue in this repository or join discussions in the Open edX community.
+
+https://aulasneo.com/
 
 License
 *******

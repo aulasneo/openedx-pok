@@ -10,8 +10,8 @@ import requests
 from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
 from openedx_pok.models import CertificateTemplate
-
 from openedx_pok.utils import split_name
+from openedx_pok.i18n import resolve_language_tag
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +130,7 @@ class PokApiClient:
         for param in active_params:
             custom_params[param] = kwargs.get(param, "")
 
+        lang_tag = resolve_language_tag(user)
         payload = {
             "credential": {
                 "tags": [
@@ -145,7 +146,7 @@ class PokApiClient:
                 "emitter": organization
             },
             "receiver": {
-                "languageTag": "es-ES",
+                "languageTag": lang_tag,
                 "identification": str(user.id),
                 "email": email,
                 "lastName": last_name,
@@ -236,6 +237,7 @@ class PokApiClient:
         for param in active_params:
             custom_params[param] = kwargs.get(param, "")
 
+        lang_tag = resolve_language_tag(user)
         payload = {
             "credential": {
                 "emissionType": self.emission_type,
@@ -245,7 +247,7 @@ class PokApiClient:
                 "emitter": organization
             },
             "receiver": {
-                "languageTag": "es-ES",
+                "languageTag": lang_tag,
                 "firstName": first_name,
                 "lastName": last_name
             },

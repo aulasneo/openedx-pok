@@ -10,7 +10,15 @@ Change Log
    This project adheres to Semantic Versioning (https://semver.org/).
 
 Unreleased
-**********
+******************
+
+Changed
+=======
+
+* Added support for language tag resolution based on user profile, HTTP Accept-Language, and thread language.
+
+0.2.0 - 2025-06-03
+******************
 
 Added
 =====

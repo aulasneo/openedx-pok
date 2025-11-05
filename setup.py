@@ -131,8 +131,9 @@ CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encod
 setup(
     name='openedx-pok',
     version=VERSION,
-    description="""A Django extension for Open edX that provides a webhook API for integration with external systems. This application facilitates real-time communication between the Open edX platform and third-party services, enabling automatic notifications when specific events occur in the LMS, such as completing a course, submitting an assignment, or passing an assessment. It includes JWT authentication, signature handling for verifying requests, retry capabilities for failed webhooks, and an admin dashboard for monitoring the status of sent notifications.""",
+    description="""Django plugin for Open edX that provides a webhook API to notify external systems of LMS events (e.g., course completion). Includes JWT authentication, request signature verification, automatic retries for failed webhooks, and an admin dashboard.""",
     long_description=README + '\n\n' + CHANGELOG,
+    long_description_content_type="text/x-rst",
     author='aulasneo',
     author_email='lberoes@aulasneo.com',
     url='https://github.com/openedx/openedx-pok',

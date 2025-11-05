@@ -9,7 +9,7 @@ Change Log
 
    This project adheres to Semantic Versioning (https://semver.org/).
 
-Unreleased
+1.0.1 - 2025-11-05
 ******************
 
 Changed

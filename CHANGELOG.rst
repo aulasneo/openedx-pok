@@ -9,6 +9,14 @@ Change Log
 
    This project adheres to Semantic Versioning (https://semver.org/).
 
+Unreleased
+******************
+
+Changed
+=======
+
+* Enhanced language tag resolution with user preferences and normalization.
+
 1.0.1 - 2025-11-05
 ******************
 

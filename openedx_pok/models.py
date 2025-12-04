@@ -4,7 +4,6 @@ Database models for openedx_pok.
 
 from django.db import models
 from model_utils.models import TimeStampedModel
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -108,8 +107,8 @@ class CertificateTemplate(TimeStampedModel):
     """
     Model for linking a course with a template.
     """
-    course = models.ForeignKey(
-        CourseOverview,
+    course = models.OneToOneField(
+        "course_overviews.CourseOverview",
         on_delete=models.CASCADE,
         help_text="Course ID associated with the template",
     )

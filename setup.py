@@ -131,7 +131,7 @@ CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encod
 setup(
     name='openedx-pok',
     version=VERSION,
-    description="""Django plugin for Open edX that provides a webhook API to notify external systems of LMS events (e.g., course completion). Includes JWT authentication, request signature verification, automatic retries for failed webhooks, and an admin dashboard.""",
+    description="Django plugin for Open edX to manage POK certificates",
     long_description=README + '\n\n' + CHANGELOG,
     long_description_content_type="text/x-rst",
     author='aulasneo',

@@ -1,6 +1,5 @@
-"""
-POK API client for certificate issuance.
-"""
+"""POK API client for certificate issuance."""
+
 import json
 import logging
 from datetime import datetime
@@ -9,9 +8,10 @@ from urllib.parse import urljoin
 import requests
 from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
+
+from openedx_pok.i18n import resolve_language_tag
 from openedx_pok.models import CertificateTemplate
 from openedx_pok.utils import split_name
-from openedx_pok.i18n import resolve_language_tag
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class PokApiClient:
         except CertificateTemplate.DoesNotExist:
             template = None
 
-        self.api_key =  settings.POK_API_KEY
+        self.api_key = settings.POK_API_KEY
         self.template = template.template_id if template else settings.POK_TEMPLATE_ID
         self.emission_type = template.emission_type if template else "pok"
         self.page = template.page_id if template and template.page_id is not None else settings.POK_PAGE_ID
@@ -36,7 +36,8 @@ class PokApiClient:
         self.base_url = settings.POK_API_URL
         self.timeout = settings.POK_TIMEOUT
 
-    def _get_headers(self, is_preview=False):
+    def _get_headers(self, is_preview: bool = False):
+        """Build the headers required by the POK API."""
         headers = {
             'Authorization': f'ApiKey {self.api_key}',
             'Accept': 'application/json',
@@ -47,10 +48,7 @@ class PokApiClient:
         return headers
 
     def _get_active_custom_parameters(self):
-        """
-        Devuelve un diccionario con los parámetros personalizados activos de la plantilla POK.
-        Ejemplo: {'grade': '23978c77-...', 'signatory': '9ea35e3e-...'}
-        """
+        """Get a mapping of active custom parameter labels to their IDs."""
         try:
             endpoint = urljoin(self.base_url, f'template/{self.template}')
             response = requests.get(endpoint, headers=self._get_headers(), timeout=self.timeout)
@@ -64,11 +62,12 @@ class PokApiClient:
                 if param.get("label") and param.get("id")
             }
 
-            logger.info(f"[POK] Active custom parameters for template {self.template}: {json.dumps(active_params, indent=2)}")
+            logger.info(f"[POK] Active custom parameters for template {self.template}: "
+                        f"{json.dumps(active_params, indent=2)}")
             return active_params
 
-        except Exception as e:
-            logger.warning(f"[POK] Could not fetch active template attributes: {str(e)}")
+        except (requests.exceptions.RequestException, ValueError) as exc:
+            logger.warning("[POK] Could not fetch active template attributes: %s", exc)
             return {}
 
     def get_organization_details(self):
@@ -119,16 +118,27 @@ class PokApiClient:
                 'error': str(e)
             }
 
-    def request_certificate(self, user, course_key, mode, organization, course_title,
-                            **kwargs):
+    def request_certificate(
+        self,
+        user,
+        course_key,
+        *,
+        mode,
+        organization,
+        course_title,
+        **kwargs,
+    ):
+        """Issue a certificate for the given user and course."""
         endpoint = urljoin(self.base_url, 'credential/')
         email = user.email
-        first_name, last_name = split_name(user.profile.name)
+        user_profile = user.profile if hasattr(user, "profile") else None
+        user_name = user_profile.name if user_profile and hasattr(user_profile, "name") else None
+        if not user_name:
+            user_name = user.username if hasattr(user, "username") else ""
+        first_name, last_name = split_name(user_name)
 
         active_params = self._get_active_custom_parameters()
-        custom_params = {}
-        for param in active_params:
-            custom_params[param] = kwargs.get(param, "")
+        custom_params = {param: kwargs.get(param, "") for param in active_params}
 
         lang_tag = resolve_language_tag(user)
         payload = {
@@ -165,7 +175,7 @@ class PokApiClient:
 
         try:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
-            response = requests.post(endpoint, json=payload, headers=self._get_headers())
+            response = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
 
             if response.status_code != 200:
                 logger.error(f"POK returned non-200 status: {response.status_code}, body: {response.text}")
@@ -182,11 +192,9 @@ class PokApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Error requesting certificate from POK: {str(e)}")
             return {'success': False, 'error': str(e)}
-        except Exception as e:
-            logger.exception(f"Unexpected error in POK API client: {str(e)}")
-            return {'success': False, 'error': str(e)}
-
-
+        except (ValueError, TypeError) as exc:
+            logger.exception("Unexpected error in POK API client: %s", exc)
+            return {'success': False, 'error': str(exc)}
 
     def get_credential_details(self, certificate_id, decrypted=None):
         """
@@ -226,7 +234,8 @@ class PokApiClient:
         """
         endpoint = urljoin(self.base_url, "template/preview")
 
-        user_name = getattr(user.profile, "name")
+        user_profile = user.profile if hasattr(user, "profile") else None
+        user_name = user_profile.name if user_profile and hasattr(user_profile, "name") else None
         if not user_name:
             user_name = user.username
 
@@ -286,10 +295,10 @@ class PokApiClient:
 
         except requests.exceptions.HTTPError as e:
             response = e.response
-            logger.error(f"POK preview HTTP error: {response.status_code} - {response.reason} | Response body: {response.text}")
+            logger.error(f"POK preview HTTP error: {response.status_code} - {response.reason} | "
+                         f"Response body: {response.text}")
             return {"success": False, "error": f"{response.status_code}: {response.text}"}
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error fetching template preview: {str(e)}")
             return {"success": False, "error": str(e)}
-

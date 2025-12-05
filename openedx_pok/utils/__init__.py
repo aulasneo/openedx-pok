@@ -1,5 +1,8 @@
-from datetime import datetime
+"""
+Utility functions for the openedx-pok plugin.
+"""
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,8 @@ def split_name(full_name):
         tuple: A tuple containing (first_name, last_name)
             - If only one word is provided, it's considered the first name and last name is empty.
             - If two words are provided, the first is considered the first name and the second the last name.
-            - If more than two words are provided, the first word is considered the first name and all remaining words are combined as the last name.
+            - If more than two words are provided, the first word is considered the first name and all
+              remaining words are combined as the last name.
 
     Examples:
         >>> split_name("Leonardo")

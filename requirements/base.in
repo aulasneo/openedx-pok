@@ -6,3 +6,5 @@ openedx-atlas
 edx-django-utils
 django-model-utils
 edx-opaque-keys
+requests
+djangorestframework

@@ -4,7 +4,8 @@ Admin settings for POK certificate integration.
 import logging
 
 from django.contrib import admin
-from .models import PokCertificate, CertificateTemplate
+
+from .models import CertificateTemplate, PokCertificate
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,6 @@ class CertificatePokApiAdmin(admin.ModelAdmin):
 class CourseTemplateAdmin(admin.ModelAdmin):
     """Admin interface for CertificateTemplate model."""
 
-    list_display = ['course', 'template_id', 'emission_type', 'page_id','created', 'modified']
+    list_display = ['course', 'template_id', 'emission_type', 'page_id', 'created', 'modified']
     search_fields = ['course__id', 'template_id']
     readonly_fields = ['created', 'modified']
-    

@@ -1,9 +1,15 @@
+"""App configuration for the openedx_pok plugin."""
+
 from django.apps import AppConfig
-from edx_django_utils.plugins.constants import PluginURLs, PluginSettings
+from edx_django_utils.plugins.constants import PluginSettings, PluginURLs
+
 
 class OpenedxPokConfig(AppConfig):
+    """Configuration for the openedx_pok Django application."""
+
     name = 'openedx_pok'
     verbose_name = "POK"
+    default_auto_field = 'django.db.models.BigAutoField'
 
     plugin_app = {
         PluginURLs.CONFIG: {

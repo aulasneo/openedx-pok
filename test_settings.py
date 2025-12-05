@@ -32,6 +32,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
+    'course_overviews',
     'openedx_pok',
 )
 

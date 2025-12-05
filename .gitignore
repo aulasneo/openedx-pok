@@ -66,3 +66,7 @@ requirements/private.txt
 
 # Idea IDE
 .idea
+
+pii_report
+
+default.db

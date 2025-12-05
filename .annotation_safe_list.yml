@@ -39,3 +39,5 @@ waffle.Sample:
   ".. no_pii:": "This model has no PII"
 waffle.Switch:
   ".. no_pii:": "This model has no PII"
+course_overviews.CourseOverview:
+  ".. no_pii:": "This is a mock model for testing purposes"

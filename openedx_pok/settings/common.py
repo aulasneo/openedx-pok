@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def plugin_settings(settings):
     """
     Defines POK webhook settings for Open edX environments.

@@ -1,26 +1,27 @@
-# views POK
+"""Views for POK certificate integration."""
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.http import HttpResponse, Http404
-from .models import PokCertificate
-from .client import PokApiClient
-from opaque_keys.edx.keys import CourseKey
-from django.conf import settings
-import requests
 import logging
+
+import requests
+from django.http import Http404, HttpResponse
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .client import PokApiClient
+from .models import PokCertificate
 
 logger = logging.getLogger(__name__)
 
+
 class CertificateImageDownloadView(APIView):
-    #permission_classes = [IsAuthenticated]
+    """Serve a certificate image as a downloadable JPG."""
 
     def get(self, request):
         """
-        Descarga la imagen del certificado como JPG usando query params.
-        El image_content se obtiene del campo 'location' en 'content' de la respuesta del cliente POK,
-        igual que en el filter CertificateRenderFilter.
+        Download certificate image as JPG using query params.
+
+        The image_content is obtained from the 'location' field in 'content' of the POK client response,
+        same as in the CertificateRenderFilter filter.
         """
         course_id = request.query_params.get("course_id")  # Usar como string
         user_id = request.query_params.get("user_id")
@@ -54,7 +55,7 @@ class CertificateImageDownloadView(APIView):
             raise Http404("Imagen del certificado no disponible.")
 
         # Descargar la imagen
-        img_response = requests.get(image_content)
+        img_response = requests.get(image_content, timeout=10)
         logger.info(f"Status de descarga de imagen: {img_response.status_code}")
 
         if img_response.status_code != 200:

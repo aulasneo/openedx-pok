@@ -2,17 +2,20 @@
 Database models for openedx_pok.
 """
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from model_utils.models import TimeStampedModel
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 class PokCertificate(TimeStampedModel):
     """
     Model for storing POK certificate data.
+
     .. no_pii:
     """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -95,6 +98,8 @@ class PokCertificate(TimeStampedModel):
     )
 
     class Meta:
+        """Meta options for PokCertificate model."""
+
         unique_together = ('user_id', 'course_id')
 
     def __str__(self):
@@ -103,10 +108,14 @@ class PokCertificate(TimeStampedModel):
         """
         return f'POK Certificate for user {self.user_id} in course {self.course_id}'
 
+
 class CertificateTemplate(TimeStampedModel):
     """
     Model for linking a course with a template.
+
+    .. no_pii:
     """
+
     course = models.OneToOneField(
         "course_overviews.CourseOverview",
         on_delete=models.CASCADE,
@@ -130,14 +139,13 @@ class CertificateTemplate(TimeStampedModel):
             ('blockchain', 'Blockchain')
         ]
     )
-    
+
     page_id = models.CharField(
         max_length=255,
         help_text="Page ID associated with the template",
         blank=True,
         null=True
     )
-
 
     def __str__(self):
         """

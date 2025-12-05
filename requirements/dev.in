@@ -7,3 +7,5 @@
 
 diff-cover                # Changeset diff test coverage
 edx-i18n-tools            # For i18n_tool dummy
+djangorestframework       # Required for local API views
+requests                  # HTTP client

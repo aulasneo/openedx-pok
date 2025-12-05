@@ -1,29 +1,70 @@
-"""
-POK certificate filter implementations.
-"""
+"""POK certificate filter implementations."""
 
-import json
+from __future__ import annotations
+
 import logging
-import six
+from typing import Any, Dict, Optional
+from urllib.parse import quote
 
-from django.http import HttpResponse
-from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from urllib.parse import quote
-from django.urls import reverse
-
+from django.db import DatabaseError
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 from opaque_keys.edx.keys import CourseKey
-from openedx.core.lib.courses import get_course_by_id
-from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
-from organizations import api as organizations_api
-from openedx_filters import PipelineStep
-from openedx_filters.learning.filters import (
-    CertificateRenderStarted, CertificateCreationRequested
-)
 
-from .models import CertificateTemplate, PokCertificate
+try:  # pragma: no cover - Open edX will provide these imports
+    from openedx.core.lib.courses import get_course_by_id
+except ImportError:  # pragma: no cover
+    def get_course_by_id(*_args, **_kwargs):
+        """Raise ImportError when openedx.core.lib.courses is not available."""
+        raise ImportError("openedx.core.lib.courses is required to use openedx_pok.filters")
+
+
+try:  # pragma: no cover - Open edX runtime dependency
+    from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
+except ImportError:  # pragma: no cover
+    class CourseWaffleFlag:  # type: ignore[too-few-public-methods]
+        """Fallback flag that always disables the feature."""
+
+        def __init__(self, *_args, **_kwargs):
+            """Initialize the fallback flag as disabled."""
+            self._enabled = False
+
+        def is_enabled(self, *_args, **_kwargs):
+            """Return False as the feature is disabled."""
+            return False
+
+
+try:  # pragma: no cover - optional dependency
+    from organizations import api as organizations_api
+except ImportError:  # pragma: no cover
+    class _OrganizationsAPI:  # type: ignore[too-few-public-methods]
+        @staticmethod
+        def get_course_organizations(*_args, **_kwargs):
+            return []
+
+    organizations_api = _OrganizationsAPI()
+
+
+try:  # pragma: no cover - optional dependency
+    from openedx_filters import PipelineStep
+    from openedx_filters.learning.filters import CertificateCreationRequested, CertificateRenderStarted
+except ImportError:  # pragma: no cover
+    class PipelineStep:  # type: ignore[too-few-public-methods]
+        """Fallback pipeline step used when openedx-filters is unavailable."""
+
+    class CertificateRenderStarted:  # type: ignore[too-few-public-methods]
+        class RenderCustomResponse(Exception):
+            """Fallback exception for custom responses."""
+
+    class CertificateCreationRequested:  # type: ignore[too-few-public-methods]
+        class PreventCertificateCreation(Exception):
+            """Fallback exception for creation prevention."""
+
+
 from .client import PokApiClient
+from .models import CertificateTemplate, PokCertificate
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +80,19 @@ logger = logging.getLogger(__name__)
 # .. toggle_status: supported
 ENABLE_POK_COURSE_FLAG = CourseWaffleFlag('module_pok.enable', __name__)
 
-# Check if the POK module is enabled for the course
-def is_pok_enabled(course_key: CourseKey | None = None) -> bool:
+
+def is_pok_enabled(course_key: Optional[CourseKey] = None) -> bool:
     """
-    Returns True if the POK module is enabled for the given course.
+    Return True if the POK module is enabled for the given course.
     """
     return ENABLE_POK_COURSE_FLAG.is_enabled(course_key)
 
 
 # === Helper Functions ===
 
-def _get_signatory_data(course_cert_data):
+def _get_signatory_data(course_cert_data: Dict[str, Any]) -> Dict[str, str]:
     """
-    Extracts signatory information (name, title, organization) from the course certificate data.
+    Extract signatory information (name, title, organization) from the course certificate data.
     """
     signatory = course_cert_data.get("signatories", [{}])[0]
     return {
@@ -60,9 +101,11 @@ def _get_signatory_data(course_cert_data):
         "signatory_organization": signatory.get("organization", "")
     }
 
-def _get_custom_params(course_key):
+
+def _get_custom_params(course_key: CourseKey) -> Dict[str, str]:
     """
-    Builds a dictionary with custom parameters to send to the POK API.
+    Build a dictionary with custom parameters to send to the POK API.
+
     Includes platform name and signatory info.
     """
     course = get_course_by_id(course_key)
@@ -73,10 +116,12 @@ def _get_custom_params(course_key):
     }
     return params
 
-def _get_org_name(course_key):
+
+def _get_org_name(course_key: CourseKey) -> str:
     """
-    Returns the organization name for the course, using either display_organization
-    or the organizations API fallback.
+    Return the organization name for the course.
+
+    Uses either display_organization or the organizations API fallback.
     """
     course = get_course_by_id(course_key)
     if course.display_organization:
@@ -87,37 +132,52 @@ def _get_org_name(course_key):
         return organizations[0].get('name', organizations[0].get('short_name'))
     return ""
 
-def build_social_links(view_url, image_content, course_title, platform_name, twitter_account=None):
+
+def build_social_links(
+    view_url: str,
+    image_content: str,
+    course_title: str,
+    platform_name: str,
+    twitter_account: Optional[str] = None,
+) -> Dict[str, str]:
     """
     Build social share links using the certificate view_url and image_content.
     """
     tweet_text = f"¡Obtuve mi certificado '{course_title}' en {platform_name}! {image_content}"
+    if twitter_account:
+        handle = twitter_account.lstrip("@")
+        tweet_text = f"{tweet_text} via @{handle}"
 
     return {
-        'facebook': f"https://www.facebook.com/sharer/sharer.php?u={quote(image_content)}",
-        'linkedin': f"https://www.linkedin.com/sharing/share-offsite/?url={quote(image_content)}",
+        'facebook': f"https://www.facebook.com/sharer/sharer.php?u={quote(view_url)}",
+        'linkedin': f"https://www.linkedin.com/sharing/share-offsite/?url={quote(view_url)}",
         'twitter': f"https://twitter.com/intent/tweet?text={quote(tweet_text)}",
         'image_content': image_content
     }
 
 # === Certificate Creation Filter ===
 
+
 class CertificateCreatedFilter(PipelineStep):
     """
     Triggered when a certificate is issued.
+
     Handles generation and storage of a POK certificate.
     """
 
-    def run_filter(self, **kwargs):
+    def run_filter(self, **kwargs):  # pylint: disable=too-many-statements
         """
-        Handles the full process of creating a POK certificate.
+        Handle the full process of creating a POK certificate.
+
         - Checks if certificate already exists.
         - If not, requests one via POK API.
         - Stores metadata returned by the API into the PokCertificate model.
         """
         if not is_pok_enabled(kwargs.get("course_key")):
-            logger.info("[POK] POK module is not enabled for this course, skipping certificate creation.")
-            return
+            logger.info(
+                "[POK] POK module is not enabled for this course, skipping certificate creation.",
+            )
+            return kwargs
 
         user = kwargs.get("user")
         course_key = kwargs.get("course_key")
@@ -125,7 +185,8 @@ class CertificateCreatedFilter(PipelineStep):
         enrollment_mode = kwargs.get("enrollment_mode")
 
         if not user or not course_key:
-            raise CertificateCreationRequested.PreventCertificateCreation("[POK] Missing required context to create certificate.")
+            raise CertificateCreationRequested.PreventCertificateCreation(
+                "[POK] Missing required context to create certificate.")
 
         course_id = str(course_key)
         user_name = getattr(user.profile, "name", "") or user.username
@@ -143,7 +204,7 @@ class CertificateCreatedFilter(PipelineStep):
             course = get_course_by_id(course_key)
             course_cert_data = course.certificates.get("certificates")[0]
             course_title = course_cert_data.get("course_title") or course.display_name
-            
+
             try:
                 template = CertificateTemplate.objects.get(course=course_key)
             except CertificateTemplate.DoesNotExist:
@@ -176,39 +237,45 @@ class CertificateCreatedFilter(PipelineStep):
             pok_certificate.title = credential.get("title")
             pok_certificate.emitter = credential.get("emitter")
             pok_certificate.tags = credential.get("tags", [])
-            pok_certificate.page = template.page_id if template and template.page_id is not None else settings.POK_PAGE_ID
+            if template and template.page_id is not None:
+                pok_certificate.page = template.page_id
+            else:
+                pok_certificate.page = settings.POK_PAGE_ID
             pok_certificate.receiver_email = receiver.get("email")
             pok_certificate.receiver_name = user_name
             pok_certificate.save()
 
             logger.info(f"[POK] Certificate created for user={user.id}, course={course_id}")
 
-        except Exception as e:
-            logger.exception("[POK] Unexpected error during certificate creation: %s", str(e))
+        except (DatabaseError, ValueError, TypeError) as exc:
+            logger.exception("[POK] Unexpected error during certificate creation: %s", exc)
             raise CertificateCreationRequested.PreventCertificateCreation(
-                message=f"[POK] Unexpected error: {str(e)}"
+                message=f"[POK] Unexpected error: {exc}"
             )
 
         return kwargs
 
 # === Certificate Render Filter ===
 
+
 class CertificateRenderFilter(PipelineStep):
     """
     Renders or previews the certificate when a user views it.
     """
-    def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
+
+    def run_filter(self, context, custom_template):
         """
         Entry point for the filter.
+
         Determines whether to show a preview (for unissued certs) or render an issued certificate.
         """
         course_id = context.get("course_id")
         course_key = CourseKey.from_string(course_id)
-        
+
         if not is_pok_enabled(course_key):
             logger.info("[POK] POK module is not enabled for this course, skipping certificate rendering.")
-            return 
-        
+            return {"context": context, "custom_template": custom_template}
+
         user_id = context.get("accomplishment_user_id")
 
         if not user_id or not course_id:
@@ -224,7 +291,8 @@ class CertificateRenderFilter(PipelineStep):
 
     def _render_preview(self, context, user_id, course_id, client):
         """
-        Renders a certificate preview using the POK API.
+        Render a certificate preview using the POK API.
+
         This is typically shown in Studio or in cases where no certificate exists yet.
         """
         try:
@@ -232,20 +300,25 @@ class CertificateRenderFilter(PipelineStep):
             user = User.objects.get(id=user_id)
             course_key = CourseKey.from_string(course_id)
             custom_params = _get_custom_params(course_key)
+            course_title = context.get("certificate_data", {}).get("course_title")
+            if not course_title:
+                course_title = context.get("accomplishment_copy_course_name")
 
             response = client.get_template_preview(
                 user=user,
                 organization=_get_org_name(course_key),
-                course_title=context.get("certificate_data", {}).get("course_title") or context.get("accomplishment_copy_course_name"),
+                course_title=course_title,
                 **custom_params
             )
 
             if not response.get("success"):
-                logger.error(f"[POK] Preview API failed: {response.get('error')}")
-                return
+                error_msg = f"[POK] Preview API failed: {response.get('error')}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
             preview_url = response["preview_url"]
-            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
+            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace(
+                '/learning', '/authoring').replace(':2000', ':2001')
 
             html = render_to_string("openedx_pok/certificate_preview.html", {
                 "document_title": "Certificate Preview",
@@ -263,15 +336,16 @@ class CertificateRenderFilter(PipelineStep):
 
         except CertificateRenderStarted.RenderCustomResponse as r:
             raise r
-        except Exception as e:
+        except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.exception(f"[POK] Error rendering preview: {str(e)}")
+            raise
 
     def _render_issued_certificate(self, context, user_id, course_id, client):
         """
-        Determines the current certificate state and routes rendering accordingly.
+        Determine the current certificate state and route rendering accordingly.
+
         Supports 'emitted' and 'processing' states, or shows an error if no cert is found.
         """
-
         try:
             certificate = PokCertificate.objects.filter(user_id=user_id, course_id=course_id).first()
             if not certificate:
@@ -286,16 +360,16 @@ class CertificateRenderFilter(PipelineStep):
 
         except CertificateRenderStarted.RenderCustomResponse as r:
             raise r
-        except Exception as e:
+        except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.exception("[POK] Error rendering issued certificate: %s", str(e))
             return self._render_error_page(context, str(e), course_id, user_id)
 
     def _render_emitted_certificate(self, context, certificate, user_id, client):
         """
-        Renders the final issued certificate with full image and metadata.
+        Render the final issued certificate with full image and metadata.
+
         Uses decrypted data from the POK API.
         """
-
         try:
             response = client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
             if not response.get("success"):
@@ -304,12 +378,13 @@ class CertificateRenderFilter(PipelineStep):
             image_content = response["content"].get("location")
             if not image_content:
                 raise Exception("Missing certificate image URL")
-            
-            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace('/learning', '/authoring').replace(':2000', ':2001')
-            
+
+            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace(
+                '/learning', '/authoring'
+                ).replace(':2000', ':2001')
+
             mfe_config = getattr(settings, "MFE_CONFIG", None)
             lms_base_url = mfe_config.get("LMS_BASE_URL")
-
 
             social_links = build_social_links(
                 view_url=certificate.view_url,
@@ -339,13 +414,14 @@ class CertificateRenderFilter(PipelineStep):
 
         except CertificateRenderStarted.RenderCustomResponse as r:
             raise r
-        except Exception as e:
+        except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error("[POK] Failed to render emitted certificate: %s", str(e))
-            return self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
+            self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
 
     def _render_processing_certificate(self, context, certificate, client):
         """
-        Renders a 'processing' status page for certificates that haven't been emitted yet.
+        Render a 'processing' status page for certificates that haven't been emitted yet.
+
         Also updates the certificate state if the POK API returns new status.
         """
         try:
@@ -367,13 +443,13 @@ class CertificateRenderFilter(PipelineStep):
 
         except CertificateRenderStarted.RenderCustomResponse as r:
             raise r
-        except Exception as e:
+        except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.exception("[POK] Failed to render processing certificate: %s", str(e))
-            return self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
+            self._render_error_page(context, str(e), certificate.course_id, certificate.user_id)
 
     def _render_error_page(self, context, error_message, course_id, user_id):
         """
-        Renders a generic error page with a user-friendly message when rendering fails.
+        Render a generic error page with a user-friendly message when rendering fails.
         """
         html = render_to_string("openedx_pok/certificate_error.html", {
             "document_title": context.get("document_title", "Error"),

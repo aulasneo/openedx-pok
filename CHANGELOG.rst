@@ -9,6 +9,15 @@ Change Log
 
    This project adheres to Semantic Versioning (https://semver.org/).
 
+Unreleased
+******************
+
+Changed
+=======
+
+* Do not allow multiple templates for the same course.
+* Improve testing and code quality.
+
 1.0.2 - 2025-11-06
 ******************
 

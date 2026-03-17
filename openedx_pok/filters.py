@@ -266,12 +266,19 @@ class CertificateRenderFilter(PipelineStep):
     Renders or previews the certificate when a user views it.
     """
 
-    def run_filter(self, context, custom_template):
+    def run_filter(self, **kwargs):
         """
         Entry point for the filter.
 
         Determines whether to show a preview (for unissued certs) or render an issued certificate.
         """
+        context = kwargs.get("context")
+        custom_template = kwargs.get("custom_template")
+
+        if context is None:
+            logger.warning("[POK] Missing render context")
+            return {"context": context, "custom_template": custom_template}
+
         course_id = context.get("course_id")
         course_key = CourseKey.from_string(course_id)
 

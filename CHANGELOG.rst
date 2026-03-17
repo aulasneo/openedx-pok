@@ -9,6 +9,21 @@ Change Log
 
    This project adheres to Semantic Versioning (https://semver.org/).
 
+Unreleased
+******************
+
+Changed
+=======
+
+* Aligned package requirements with Open edX Teak / Tutor 20.x, including `openedx-filters`.
+* Updated certificate creation filter handling to use the Teak filter payload shape for `mode` and `grade`.
+* Tightened emitted certificate rendering to log and fail explicitly when `MFE_CONFIG` is missing.
+
+Fixed
+=====
+
+* Fixed the certificate render pipeline step signature so the quality checks pass under `make test-all`.
+
 1.0.3 - 2025-12-05
 ******************
 

@@ -8,31 +8,42 @@ asgiref==3.8.1
     # via django
 cffi==1.17.1
     # via pynacl
+charset-normalizer==2.0.12
+    # via requests
 click==8.1.8
     # via edx-django-utils
 django==4.2.20
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   -r requirements/base.in
+    #   -c requirements/constraints.txt
     #   django-crum
     #   django-model-utils
     #   django-waffle
+    #   djangorestframework
     #   edx-django-utils
+    #   openedx-filters
 django-crum==0.7.9
     # via edx-django-utils
 django-model-utils==5.0.0
     # via -r requirements/base.in
 django-waffle==4.2.0
     # via edx-django-utils
+djangorestframework==3.14.0
+    # via -r requirements/base.in
 dnspython==2.7.0
     # via pymongo
-edx-django-utils==7.2.0
+edx-django-utils==7.4.0
     # via -r requirements/base.in
-edx-opaque-keys==2.12.0
-    # via -r requirements/base.in
+edx-opaque-keys[django]==3.0.0
+    # via
+    #   -r requirements/base.in
+    #   openedx-filters
+idna==3.10
+    # via requests
 newrelic==10.7.0
     # via edx-django-utils
-openedx-atlas==0.6.2
+openedx-atlas==0.7.0
+    # via -r requirements/base.in
+openedx-filters==2.0.1
     # via -r requirements/base.in
 pbr==6.1.1
     # via stevedore
@@ -44,6 +55,8 @@ pymongo==4.11.3
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
+requests==2.32.3
+    # via -r requirements/base.in
 sqlparse==0.5.3
     # via django
 stevedore==5.4.1
@@ -52,6 +65,8 @@ stevedore==5.4.1
     #   edx-opaque-keys
 typing-extensions==4.13.0
     # via edx-opaque-keys
+urllib3==2.3.0
+    # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

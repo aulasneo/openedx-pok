@@ -1,10 +1,10 @@
-# Core requirements for using this application
+# Core requirements aligned with Open edX Teak / Tutor 20.x
 -c constraints.txt
 
-Django             # Web application framework
 openedx-atlas
+openedx-filters
 edx-django-utils
 django-model-utils
-edx-opaque-keys
+edx-opaque-keys[django]
 requests
 djangorestframework

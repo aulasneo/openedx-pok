@@ -182,7 +182,7 @@ class CertificateCreatedFilter(PipelineStep):
         user = kwargs.get("user")
         course_key = kwargs.get("course_key")
         grade = kwargs.get("grade")
-        enrollment_mode = kwargs.get("enrollment_mode")
+        mode = kwargs.get("mode")
 
         if not user or not course_key:
             raise CertificateCreationRequested.PreventCertificateCreation(
@@ -191,8 +191,11 @@ class CertificateCreatedFilter(PipelineStep):
         course_id = str(course_key)
         user_name = getattr(user.profile, "name", "") or user.username
         custom_params = _get_custom_params(course_key)
-        if grade and hasattr(grade, "percent"):
-            custom_params["grade"] = str(round(grade.percent * 100))
+        if grade is not None:
+            try:
+                custom_params["grade"] = str(round(float(grade) * 100))
+            except (TypeError, ValueError):
+                logger.warning("[POK] Could not normalize certificate grade=%r", grade)
 
         try:
             pok_certificate, _ = PokCertificate.objects.get_or_create(user_id=user.id, course_id=course_id)
@@ -214,7 +217,7 @@ class CertificateCreatedFilter(PipelineStep):
             response = client.request_certificate(
                 user=user,
                 course_key=course_id,
-                mode=enrollment_mode,
+                mode=mode,
                 organization=_get_org_name(course_key),
                 course_title=course_title,
                 **custom_params
@@ -384,6 +387,9 @@ class CertificateRenderFilter(PipelineStep):
                 ).replace(':2000', ':2001')
 
             mfe_config = getattr(settings, "MFE_CONFIG", None)
+            if mfe_config is None:
+                logger.error("[POK] MFE_CONFIG is not configured; cannot render emitted certificate.")
+                raise ValueError("MFE_CONFIG is not configured")
             lms_base_url = mfe_config.get("LMS_BASE_URL")
 
             social_links = build_social_links(

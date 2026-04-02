@@ -126,13 +126,11 @@ if sys.argv[-1] == 'tag':
     sys.exit()
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding="utf8").read()
-CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encoding="utf8").read()
-
 setup(
     name='openedx-pok',
     version=VERSION,
     description="Django plugin for Open edX to manage POK certificates",
-    long_description=README + '\n\n' + CHANGELOG,
+    long_description=README,
     long_description_content_type="text/x-rst",
     author='aulasneo',
     author_email='lberoes@aulasneo.com',
@@ -150,7 +148,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Framework :: Django',
-        'Framework :: Django :: 4.2',
+        'Framework :: Django :: 5.2',
         'Intended Audience :: Developers',
         'License :: Other/Proprietary License',
         'Natural Language :: English',

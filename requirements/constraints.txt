@@ -1,11 +1,11 @@
-# Constraints aligned with Open edX Teak / Tutor 20.x.
+# Constraints aligned with Open edX Ulmo / edx-platform release/ulmo.
 #
 # Keep these local so setup.py can apply them when building install_requires.
 
-Django==4.2.20
-djangorestframework==3.14.0
+django==5.2.11
+djangorestframework==3.16.1
 django-model-utils==5.0.0
-edx-django-utils==7.4.0
+edx-django-utils==8.0.1
 edx-opaque-keys[django]==3.0.0
 openedx-atlas==0.7.0
-openedx-filters==2.0.1
+openedx-filters==2.1.0

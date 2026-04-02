@@ -1,0 +1,70 @@
+# Change Log
+
+All enhancements and patches to `openedx_pok` are documented in this file.
+The project follows [Keep a Changelog](https://keepachangelog.com/) and
+[Semantic Versioning](https://semver.org/).
+
+## Unreleased
+
+### Changed
+
+- Aligned package requirements with Open edX Ulmo, based on `openedx-platform` `release/ulmo`.
+- Updated local test metadata to target Django 5.2 for Ulmo compatibility.
+
+## 1.1.0 - 2026-03-17
+
+### Changed
+
+- Aligned package requirements with Open edX Teak / Tutor 20.x, including `openedx-filters`.
+- Updated certificate creation filter handling to use the Teak filter payload shape for `mode` and `grade`.
+- Tightened emitted certificate rendering to log and fail explicitly when `MFE_CONFIG` is missing.
+
+### Fixed
+
+- Fixed the certificate render pipeline step signature so the quality checks pass under `make test-all`.
+
+## 1.0.3 - 2025-12-05
+
+### Changed
+
+- Do not allow multiple templates for the same course.
+- Improve testing and code quality.
+
+## 1.0.2 - 2025-11-06
+
+### Changed
+
+- Enhanced language tag resolution with user preferences and normalization.
+
+## 1.0.1 - 2025-11-05
+
+### Changed
+
+- Added support for language tag resolution based on user profile, HTTP Accept-Language, and thread language.
+
+## 0.2.0 - 2025-06-03
+
+### Added
+
+- Documentation: Detailed technical README explaining how the plugin integrates with POK API using Open edX filters.
+- Support: Initial Django admin support for managing templates and generated certificates.
+- Integration: `PokApiClient` for managing communication with POK (creation, rendering, preview, etc.).
+- Filters: Hooked into `CertificateCreationRequested` and `CertificateRenderStarted` to override default behavior.
+- Models: Added `PokCertificate` and `CertificateTemplate` for linking and tracking external certificate generation.
+- Configuration: Introduced environment-based settings for API credentials and timeouts.
+
+### Changed
+
+- Refactored certificate generation logic to fully delegate to POK API.
+- Improved error handling for API failures and rendering issues.
+
+### Fixed
+
+- Corrected integration points with Open edX to ensure compatibility with Django 4.2 and plugin architecture.
+
+## 0.1.0 - 2025-03-26
+
+### Added
+
+- First release on PyPI.
+- Initial implementation of POK integration plugin for Open edX.

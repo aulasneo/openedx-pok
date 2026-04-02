@@ -1,4 +1,4 @@
-# Core requirements aligned with Open edX Teak / Tutor 20.x
+# Core requirements aligned with Open edX Ulmo / edx-platform release/ulmo
 -c constraints.txt
 
 openedx-atlas

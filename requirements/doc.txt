@@ -34,6 +34,7 @@ charset-normalizer==2.0.12
     #   requests
 click==8.1.8
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-utils
@@ -140,6 +141,7 @@ openedx-filters==2.1.0
     #   -r requirements/test.txt
 packaging==24.2
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/test.txt
     #   build
     #   pydata-sphinx-theme

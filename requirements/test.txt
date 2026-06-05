@@ -22,6 +22,7 @@ charset-normalizer==2.0.12
     #   requests
 click==8.1.8
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/base.txt
     #   code-annotations
     #   edx-django-utils
@@ -29,7 +30,6 @@ code-annotations==2.2.0
     # via -r requirements/test.in
 coverage[toml]==7.7.1
     # via pytest-cov
-django==5.2.11
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -87,7 +87,9 @@ openedx-filters==2.1.0
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
 packaging==24.2
-    # via pytest
+    # via
+    #   -c requirements/constraints.txt
+    #   pytest
 pbr==6.1.1
     # via
     #   -r requirements/base.txt

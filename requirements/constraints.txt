@@ -3,9 +3,11 @@
 # Keep these local so setup.py can apply them when building install_requires.
 
 django==5.2.11
+click==8.1.8
 djangorestframework==3.16.1
 django-model-utils==5.0.0
 edx-django-utils==8.0.1
 edx-opaque-keys[django]==3.0.0
 openedx-atlas==0.7.0
 openedx-filters==2.1.0
+packaging==24.2

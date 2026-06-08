@@ -134,6 +134,35 @@ def _get_org_name(course_key: CourseKey) -> str:
     return ""
 
 
+def update_certificate_from_response(pok_certificate, content, *, client, course_title, organization, user):
+    """
+    Update a PokCertificate with POK response data.
+
+    Async creation responses can contain only ``id`` and ``state``. Preserve usable
+    local metadata in that case instead of overwriting non-null fields with None.
+    """
+    credential = content.get("credential", {})
+    receiver = content.get("receiver", {})
+    user_profile = getattr(user, "profile", None)
+    user_name = getattr(user_profile, "name", "") or getattr(user, "username", "")
+
+    pok_certificate.pok_certificate_id = content.get("id")
+    pok_certificate.state = normalize_certificate_state(content.get("state"))
+    pok_certificate.view_url = content.get("viewUrl")
+    pok_certificate.emission_type = (
+        credential.get("emissionType") or
+        pok_certificate.emission_type or
+        client.emission_type or
+        "pok"
+    )
+    pok_certificate.emission_date = credential.get("emissionDate")
+    pok_certificate.title = credential.get("title") or course_title
+    pok_certificate.emitter = credential.get("emitter") or organization
+    pok_certificate.tags = credential.get("tags", [])
+    pok_certificate.receiver_email = receiver.get("email") or getattr(user, "email", "")
+    pok_certificate.receiver_name = user_name
+
+
 def build_social_links(
     view_url: str,
     image_content: str,
@@ -166,7 +195,7 @@ class CertificateCreatedFilter(PipelineStep):
     Handles generation and storage of a POK certificate.
     """
 
-    def run_filter(self, **kwargs):  # pylint: disable=too-many-statements
+    def run_filter(self, **kwargs):
         """
         Handle the full process of creating a POK certificate.
 
@@ -190,7 +219,6 @@ class CertificateCreatedFilter(PipelineStep):
                 "[POK] Missing required context to create certificate.")
 
         course_id = str(course_key)
-        user_name = getattr(user.profile, "name", "") or user.username
         custom_params = _get_custom_params(course_key)
         if grade is not None:
             try:
@@ -208,6 +236,7 @@ class CertificateCreatedFilter(PipelineStep):
             course = get_course_by_id(course_key)
             course_cert_data = course.certificates.get("certificates")[0]
             course_title = course_cert_data.get("course_title") or course.display_name
+            organization = _get_org_name(course_key)
 
             try:
                 template = CertificateTemplate.objects.get(course=course_key)
@@ -219,7 +248,7 @@ class CertificateCreatedFilter(PipelineStep):
                 user=user,
                 course_key=course_id,
                 mode=mode,
-                organization=_get_org_name(course_key),
+                organization=organization,
                 course_title=course_title,
                 **custom_params
             )
@@ -230,23 +259,18 @@ class CertificateCreatedFilter(PipelineStep):
                 )
 
             content = response["content"]
-            credential = content.get("credential", {})
-            receiver = content.get("receiver", {})
-
-            pok_certificate.pok_certificate_id = content.get("id")
-            pok_certificate.state = normalize_certificate_state(content.get("state"))
-            pok_certificate.view_url = content.get("viewUrl")
-            pok_certificate.emission_type = credential.get("emissionType")
-            pok_certificate.emission_date = credential.get("emissionDate")
-            pok_certificate.title = credential.get("title")
-            pok_certificate.emitter = credential.get("emitter")
-            pok_certificate.tags = credential.get("tags", [])
+            update_certificate_from_response(
+                pok_certificate,
+                content,
+                client=client,
+                course_title=course_title,
+                organization=organization,
+                user=user,
+            )
             if template and template.page_id is not None:
                 pok_certificate.page = template.page_id
             else:
                 pok_certificate.page = settings.POK_PAGE_ID
-            pok_certificate.receiver_email = receiver.get("email")
-            pok_certificate.receiver_name = user_name
             pok_certificate.save()
 
             logger.info(f"[POK] Certificate created for user={user.id}, course={course_id}")
@@ -437,12 +461,22 @@ class CertificateRenderFilter(PipelineStep):
         """
         Render a 'processing' status page for certificates that haven't been emitted yet.
 
-        Also updates the certificate state if the POK API returns new status.
+        Also updates certificate metadata if the POK API returns new details.
         """
         try:
             response = client.get_credential_details(certificate.pok_certificate_id)
-            state = normalize_certificate_state(response.get("content", {}).get("state", "processing"))
-            certificate.state = state
+            content = response.get("content", {})
+            if content:
+                update_certificate_from_response(
+                    certificate,
+                    content,
+                    client=client,
+                    course_title=certificate.title,
+                    organization=certificate.emitter,
+                    user=certificate.user,
+                )
+            else:
+                certificate.state = "processing"
             certificate.save()
 
             html = render_to_string("openedx_pok/certificate_processing.html", {

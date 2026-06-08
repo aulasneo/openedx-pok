@@ -4,7 +4,7 @@ All enhancements and patches to `openedx_pok` are documented in this file.
 The project follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 21.0.1 - 2026-06-08
 - fix: Fix error when POK returns 202
 
 ## 21.0.0 - 2026-04-21

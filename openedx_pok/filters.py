@@ -65,6 +65,7 @@ except ImportError:  # pragma: no cover
 
 from .client import PokApiClient
 from .models import CertificateTemplate, PokCertificate
+from .utils import normalize_certificate_state
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +234,7 @@ class CertificateCreatedFilter(PipelineStep):
             receiver = content.get("receiver", {})
 
             pok_certificate.pok_certificate_id = content.get("id")
-            pok_certificate.state = content.get("state")
+            pok_certificate.state = normalize_certificate_state(content.get("state"))
             pok_certificate.view_url = content.get("viewUrl")
             pok_certificate.emission_type = credential.get("emissionType")
             pok_certificate.emission_date = credential.get("emissionDate")
@@ -361,9 +362,10 @@ class CertificateRenderFilter(PipelineStep):
             if not certificate:
                 raise ValueError("No certificate record found")
 
-            if certificate.state == "emitted":
+            state = normalize_certificate_state(certificate.state)
+            if state == "emitted":
                 return self._render_emitted_certificate(context, certificate, user_id, client)
-            elif certificate.state == "processing":
+            elif state == "processing":
                 return self._render_processing_certificate(context, certificate, client)
             else:
                 return self._render_error_page(context, "Invalid certificate state", course_id, user_id)
@@ -439,7 +441,7 @@ class CertificateRenderFilter(PipelineStep):
         """
         try:
             response = client.get_credential_details(certificate.pok_certificate_id)
-            state = response.get("content", {}).get("state", "processing")
+            state = normalize_certificate_state(response.get("content", {}).get("state", "processing"))
             certificate.state = state
             certificate.save()
 

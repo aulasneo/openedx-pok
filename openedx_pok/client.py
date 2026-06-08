@@ -11,7 +11,7 @@ from opaque_keys.edx.keys import CourseKey
 
 from openedx_pok.i18n import resolve_language_tag
 from openedx_pok.models import CertificateTemplate
-from openedx_pok.utils import split_name
+from openedx_pok.utils import normalize_certificate_state, split_name
 
 logger = logging.getLogger(__name__)
 
@@ -177,16 +177,21 @@ class PokApiClient:
             logger.info(f"Sending certificate request to POK for user {user.id} in course {course_key}")
             response = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
 
-            if response.status_code != 200:
-                logger.error(f"POK returned non-200 status: {response.status_code}, body: {response.text}")
+            if not 200 <= response.status_code < 300:
+                logger.error(f"POK returned non-success status: {response.status_code}, body: {response.text}")
                 return {
                     'success': False,
-                    'error': f"Non-200 status: {response.status_code}",
+                    'error': f"Non-success status: {response.status_code}",
                     'content': response.json()
                 }
 
             return_data = response.json()
             credential_id = return_data.get("id")
+            state = normalize_certificate_state(return_data.get("state"))
+            if state == "processing":
+                return_data["state"] = state
+                return {"success": True, "content": return_data}
+
             return self.get_credential_details(credential_id)
 
         except requests.exceptions.RequestException as e:

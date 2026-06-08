@@ -7,6 +7,15 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
+def normalize_certificate_state(state):
+    """
+    Normalize POK credential states to the local states used by the renderer.
+    """
+    if state in ("pending", "processing"):
+        return "processing"
+    return state
+
+
 def update_object(o, data):
     """
     Update a generic object with dict with data.
@@ -28,7 +37,7 @@ def update_object(o, data):
 
 def split_name(full_name):
     """
-    Splits a full name into first name and last name components.
+    Split a full name into first name and last name components.
 
     Args:
         full_name (str): The complete name to be split.

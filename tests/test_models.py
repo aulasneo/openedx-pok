@@ -78,7 +78,7 @@ def test_certificate_template_str_representation(mock_course_overview):
         template_id="template-123"
     )
 
-    expected = 'Template template-123 for course 1'
+    expected = 'Template template-123 for course course-v1:test+Test+2023'
     assert str(template) == expected
 
 

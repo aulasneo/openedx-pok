@@ -42,7 +42,7 @@ django.setup()
 def mock_course_overview():
     """Create a mock CourseOverview instance."""
     return MockCourseOverview.objects.create(
-        course_id="course-v1:test+Test+2023",
+        id="course-v1:test+Test+2023",
         display_name="Test Course"
     )
 

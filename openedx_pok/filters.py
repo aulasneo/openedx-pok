@@ -222,7 +222,8 @@ class CertificateCreatedFilter(PipelineStep):
         custom_params = _get_custom_params(course_key)
         if grade is not None:
             try:
-                custom_params["grade"] = str(round(float(grade) * 100))
+                grade_value = getattr(grade, "percent", grade)
+                custom_params["grade"] = str(round(float(grade_value) * 100))
             except (TypeError, ValueError):
                 logger.warning("[POK] Could not normalize certificate grade=%r", grade)
 
@@ -352,8 +353,7 @@ class CertificateRenderFilter(PipelineStep):
                 raise ValueError(error_msg)
 
             preview_url = response["preview_url"]
-            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace(
-                '/learning', '/authoring').replace(':2000', ':2001')
+            authoring_url = settings.COURSE_AUTHORING_MICROFRONTEND_URL.rstrip('/')
 
             html = render_to_string("openedx_pok/certificate_preview.html", {
                 "document_title": "Certificate Preview",
@@ -415,15 +415,8 @@ class CertificateRenderFilter(PipelineStep):
             if not image_content:
                 raise Exception("Missing certificate image URL")
 
-            authoring_url = settings.LEARNING_MICROFRONTEND_URL.rstrip('/').replace(
-                '/learning', '/authoring'
-                ).replace(':2000', ':2001')
-
-            mfe_config = getattr(settings, "MFE_CONFIG", None)
-            if mfe_config is None:
-                logger.error("[POK] MFE_CONFIG is not configured; cannot render emitted certificate.")
-                raise ValueError("MFE_CONFIG is not configured")
-            lms_base_url = mfe_config.get("LMS_BASE_URL")
+            authoring_url = settings.COURSE_AUTHORING_MICROFRONTEND_URL.rstrip('/')
+            lms_base_url = settings.LMS_ROOT_URL.rstrip('/')
 
             social_links = build_social_links(
                 view_url=certificate.view_url,

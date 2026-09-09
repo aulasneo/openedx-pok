@@ -56,6 +56,12 @@ Workflow
 Configuration
 *************
 
+This version targets Open edX Verawood with Python 3.12 and Django 5.2.
+See `the Verawood compatibility review <docs/verawood.rst>`_ for dependency
+alignment, integration changes, and staging verification steps. Configure
+``COURSE_AUTHORING_MICROFRONTEND_URL`` and ``LMS_ROOT_URL`` to the public Studio
+frontend and LMS URLs used by certificate pages.
+
 ### Prerequisites
 
 - A working Open edX installation.

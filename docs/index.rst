@@ -19,6 +19,7 @@ Contents:
    concepts/index
    how-tos/index
    testing
+   verawood
    internationalization
    modules
    changelog

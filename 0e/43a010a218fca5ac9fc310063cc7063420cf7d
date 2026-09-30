@@ -1,0 +1,25 @@
+openedx_pok/filters.py
+  s_fe4c2b41a5778e::t_c2d39eab2e4061 385
+  s_fe4c2b41a5778e::t_c051bc70d1d906 97-98,100
+tests/test_filters.py
+  s_fe4c2b41a5778e::t_c2d39eab2e4061 128
+  s_fe4c2b41a5778e::t_c051bc70d1d906 120,122,129,134,136-137,142-151
+CHANGELOG.md
+  s_fe4c2b41a5778e::t_c051bc70d1d906 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0e43a010a218fca5ac9fc310063cc7063420cf7d",
+  "prompts": {},
+  "sessions": {
+    "s_fe4c2b41a5778e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08852-71c5-75f2-ac89-0e73b7f29569",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Andrés González <andres@aulasneo.com>"
+    }
+  }
+}

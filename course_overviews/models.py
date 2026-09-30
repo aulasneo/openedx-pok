@@ -15,6 +15,7 @@ class CourseOverview(models.Model):
 
     class Meta:
         app_label = 'course_overviews'
+        db_table = 'course_overviews_courseoverview'
 
     def __str__(self):
         return f"CourseOverview: {self.id}"

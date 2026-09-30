@@ -94,9 +94,10 @@ def is_pok_enabled(course_key: Optional[CourseKey] = None) -> bool:
 def _required_url_setting(name):
     """Read a public URL setting or identify the missing configuration explicitly."""
     value = getattr(settings, name, None)
-    if not isinstance(value, str) or not value.strip():
+    normalized = value.strip().rstrip('/') if isinstance(value, str) else ""
+    if not normalized:
         raise ValueError(f"[POK] {name} must be configured with a nonempty public URL.")
-    return value.strip().rstrip('/')
+    return normalized
 
 
 def _get_signatory_data(course_cert_data: Dict[str, Any]) -> Dict[str, str]:
@@ -381,7 +382,7 @@ class CertificateRenderFilter(PipelineStep):
             raise r
         except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.exception(f"[POK] Error rendering preview: {str(e)}")
-            raise
+            self._render_error_page(context, str(e), course_id, user_id)
 
     def _render_issued_certificate(self, context, user_id, course_id, client):
         """

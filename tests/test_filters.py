@@ -117,36 +117,38 @@ def test_render_pipeline_uses_platform_urls(
         assert render_context["lms_base_url"] == "https://lms.example.org"
 
 
+@pytest.mark.django_db
 @pytest.mark.usefixtures("configured_filters")
-@pytest.mark.parametrize("value", [None, "", "   ", "missing"])
+@pytest.mark.parametrize("value", [None, "", "   ", "missing", "/", "///", "  ///  "])
 @pytest.mark.parametrize("issued, setting_name", [
     (False, "COURSE_AUTHORING_MICROFRONTEND_URL"),
     (True, "COURSE_AUTHORING_MICROFRONTEND_URL"),
     (True, "LMS_ROOT_URL"),
 ])
-def test_render_missing_url_configuration(settings, monkeypatch, issued, setting_name, value):
-    """Missing URLs produce actionable errors before calling the POK service."""
+def test_render_missing_url_configuration(settings, monkeypatch, test_user, *, issued, setting_name, value):
+    """Invalid URL bases render an actionable error page without calling POK."""
     if value == "missing":
         delattr(settings, setting_name)
     else:
         setattr(settings, setting_name, value)
+    settings.TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "APP_DIRS": True}]
     client = Mock()
-    renderer = Mock(return_value="<html>Configuration error</html>")
-    monkeypatch.setattr(filters_module, "render_to_string", renderer)
-    render_filter = CertificateRenderFilter.__new__(CertificateRenderFilter)
+    monkeypatch.setattr(filters_module, "is_pok_enabled", lambda _key: True)
+    monkeypatch.setattr(filters_module, "PokApiClient", lambda _key: client)
     course_id = "course-v1:test+Test+2023"
     message = f"[POK] {setting_name} must be configured with a nonempty public URL."
 
     if issued:
-        certificate = SimpleNamespace(course_id=course_id, user_id=1)
-        with pytest.raises(CertificateRenderStarted.RenderCustomResponse) as exc:
-            render_filter._render_emitted_certificate({}, certificate, 1, client)
-        assert exc.value.response.status_code == 500
-        assert renderer.call_args.args[1]["error_message"] == message
-    else:
-        with pytest.raises(ValueError) as exc:
-            render_filter._render_preview({}, 1, course_id, client)
-        assert str(exc.value) == message
+        PokCertificate.objects.create(
+            user=test_user, course_id=course_id, pok_certificate_id="credential-123", state="emitted",
+        )
+    with pytest.raises(CertificateRenderStarted.RenderCustomResponse) as exc:
+        CertificateRenderStarted.run_filter(context={
+            "course_id": course_id, "accomplishment_user_id": test_user.id,
+        }, custom_template=None)
+    assert exc.value.response.status_code == 500
+    assert message in exc.value.response.content.decode()
+    assert "Something went wrong" in exc.value.response.content.decode()
     assert not client.mock_calls
 
 

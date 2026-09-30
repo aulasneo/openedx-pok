@@ -118,6 +118,41 @@ def test_render_pipeline_uses_platform_urls(
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("configured_filters")
+@pytest.mark.parametrize("value", [None, "", "   ", "missing", "/", "///", "  ///  "])
+@pytest.mark.parametrize("issued, setting_name", [
+    (False, "COURSE_AUTHORING_MICROFRONTEND_URL"),
+    (True, "COURSE_AUTHORING_MICROFRONTEND_URL"),
+    (True, "LMS_ROOT_URL"),
+])
+def test_render_missing_url_configuration(settings, monkeypatch, test_user, *, issued, setting_name, value):
+    """Invalid URL bases render an actionable error page without calling POK."""
+    if value == "missing":
+        delattr(settings, setting_name)
+    else:
+        setattr(settings, setting_name, value)
+    settings.TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "APP_DIRS": True}]
+    client = Mock()
+    monkeypatch.setattr(filters_module, "is_pok_enabled", lambda _key: True)
+    monkeypatch.setattr(filters_module, "PokApiClient", lambda _key: client)
+    course_id = "course-v1:test+Test+2023"
+    message = f"[POK] {setting_name} must be configured with a nonempty public URL."
+
+    if issued:
+        PokCertificate.objects.create(
+            user=test_user, course_id=course_id, pok_certificate_id="credential-123", state="emitted",
+        )
+    with pytest.raises(CertificateRenderStarted.RenderCustomResponse) as exc:
+        CertificateRenderStarted.run_filter(context={
+            "course_id": course_id, "accomplishment_user_id": test_user.id,
+        }, custom_template=None)
+    assert exc.value.response.status_code == 500
+    assert message in exc.value.response.content.decode()
+    assert "Something went wrong" in exc.value.response.content.decode()
+    assert not client.mock_calls
+
+
+@pytest.mark.django_db
 def test_update_certificate_from_pending_response_preserves_required_metadata(test_user):
     """A minimal pending POK response should not null required local fields."""
     certificate = PokCertificate(

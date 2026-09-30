@@ -18,6 +18,10 @@ The project follows [Keep a Changelog](https://keepachangelog.com/) and
 - Preserve the existing `AutoField` primary keys and check migration drift in CI.
 - Read certificate grades from the platform grade object's `percent` attribute.
 - Use `COURSE_AUTHORING_MICROFRONTEND_URL` and `LMS_ROOT_URL` for certificate navigation and downloads.
+- Report missing certificate URL settings explicitly before making POK API requests.
+- Reject slash-only URL settings and show configuration errors on the POK error page for previews as well as issued certificates.
+- Use a README compatibility-review link that resolves in both GitHub and built documentation.
+- Match the course-overview test stub's table metadata to its migration and check both apps for drift.
 
 ## 21.0.1 - 2026-06-08
 - fix: Fix error when POK returns 202

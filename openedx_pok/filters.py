@@ -91,6 +91,15 @@ def is_pok_enabled(course_key: Optional[CourseKey] = None) -> bool:
 
 # === Helper Functions ===
 
+def _required_url_setting(name):
+    """Read a public URL setting or identify the missing configuration explicitly."""
+    value = getattr(settings, name, None)
+    normalized = value.strip().rstrip('/') if isinstance(value, str) else ""
+    if not normalized:
+        raise ValueError(f"[POK] {name} must be configured with a nonempty public URL.")
+    return normalized
+
+
 def _get_signatory_data(course_cert_data: Dict[str, Any]) -> Dict[str, str]:
     """
     Extract signatory information (name, title, organization) from the course certificate data.
@@ -332,6 +341,7 @@ class CertificateRenderFilter(PipelineStep):
         This is typically shown in Studio or in cases where no certificate exists yet.
         """
         try:
+            authoring_url = _required_url_setting("COURSE_AUTHORING_MICROFRONTEND_URL")
             User = get_user_model()
             user = User.objects.get(id=user_id)
             course_key = CourseKey.from_string(course_id)
@@ -353,7 +363,6 @@ class CertificateRenderFilter(PipelineStep):
                 raise ValueError(error_msg)
 
             preview_url = response["preview_url"]
-            authoring_url = settings.COURSE_AUTHORING_MICROFRONTEND_URL.rstrip('/')
 
             html = render_to_string("openedx_pok/certificate_preview.html", {
                 "document_title": "Certificate Preview",
@@ -373,7 +382,7 @@ class CertificateRenderFilter(PipelineStep):
             raise r
         except (DatabaseError, ValueError, TypeError, KeyError, AttributeError) as e:
             logger.exception(f"[POK] Error rendering preview: {str(e)}")
-            raise
+            self._render_error_page(context, str(e), course_id, user_id)
 
     def _render_issued_certificate(self, context, user_id, course_id, client):
         """
@@ -407,6 +416,8 @@ class CertificateRenderFilter(PipelineStep):
         Uses decrypted data from the POK API.
         """
         try:
+            authoring_url = _required_url_setting("COURSE_AUTHORING_MICROFRONTEND_URL")
+            lms_base_url = _required_url_setting("LMS_ROOT_URL")
             response = client.get_credential_details(certificate.pok_certificate_id, decrypted=True)
             if not response.get("success"):
                 raise Exception(f"Failed to fetch credential details: {response.get('error')}")
@@ -414,9 +425,6 @@ class CertificateRenderFilter(PipelineStep):
             image_content = response["content"].get("location")
             if not image_content:
                 raise Exception("Missing certificate image URL")
-
-            authoring_url = settings.COURSE_AUTHORING_MICROFRONTEND_URL.rstrip('/')
-            lms_base_url = settings.LMS_ROOT_URL.rstrip('/')
 
             social_links = build_social_links(
                 view_url=certificate.view_url,

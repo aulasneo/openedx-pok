@@ -1,0 +1,30 @@
+course_overviews/models.py
+  s_fe4c2b41a5778e::t_b3266c9d33b3f6 18
+README.rst
+  s_fe4c2b41a5778e::t_be808e682147a4 60
+tox.ini
+  s_fe4c2b41a5778e::t_b3266c9d33b3f6 43
+CHANGELOG.md
+  s_fe4c2b41a5778e::t_02576b22c65d42 21
+  s_fe4c2b41a5778e::t_10a8e99c4d9746 22-23
+openedx_pok/filters.py
+  s_fe4c2b41a5778e::t_ea3172707d203c 94-101,343,418-419
+tests/test_filters.py
+  s_fe4c2b41a5778e::t_ea3172707d203c 120-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7b0bfefe5c7c269b575608f0704de3374cbdadb7",
+  "prompts": {},
+  "sessions": {
+    "s_fe4c2b41a5778e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08852-71c5-75f2-ac89-0e73b7f29569",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Andrés González <andres@aulasneo.com>"
+    }
+  }
+}

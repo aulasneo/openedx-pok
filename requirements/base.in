@@ -1,10 +1,11 @@
-# Core requirements aligned with Open edX Ulmo / edx-platform release/ulmo
--c constraints.txt
-
-openedx-atlas
-openedx-filters
-edx-django-utils
-django-model-utils
-edx-opaque-keys[django]
-requests
-djangorestframework
+# Runtime compatibility ranges for Open edX Verawood (Python 3.12 / Django 5.2).
+# Exact platform pins belong in constraints.txt for local builds and tests,
+# not in wheel metadata: the host platform must control its patch versions.
+django>=5.2,<5.3
+openedx-atlas>=0.7.0,<0.8
+openedx-filters>=3.4.1,<4
+edx-django-utils>=8.0.1,<9
+django-model-utils>=5.0.0,<6
+edx-opaque-keys[django]>=4.0.0,<5
+requests>=2.33.1,<3
+djangorestframework>=3.17.1,<3.18

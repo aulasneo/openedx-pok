@@ -1,6 +1,7 @@
 # Generated migration for mock course_overviews app
 
 from django.db import migrations, models
+from opaque_keys.edx.django.models import CourseKeyField
 
 
 class Migration(migrations.Migration):
@@ -14,8 +15,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CourseOverview',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('course_id', models.CharField(max_length=255, unique=True)),
+                ('id', CourseKeyField(primary_key=True, max_length=255, serialize=False)),
                 ('display_name', models.CharField(default='Test Course', max_length=255)),
             ],
             options={

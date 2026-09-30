@@ -1,13 +1,32 @@
-# Constraints aligned with Open edX Ulmo / edx-platform release/ulmo.
-#
-# Keep these local so setup.py can apply them when building install_requires.
+# Local development/test pins from openedx-platform release/verawood.
+# Snapshot: 259473c5dfd1c82eac5e6c4d14bf6095cb25824d (reviewed 2026-09-09).
+# Source: https://github.com/openedx/edx-platform/blob/259473c5dfd1c82eac5e6c4d14bf6095cb25824d/requirements/edx/base.txt
+# Only the shared dependency subset is included. Do not embed these exact pins
+# in install_requires; production installs use the platform's own constraints.
 
-django==5.2.11
-click==8.1.8
-djangorestframework==3.16.1
+asgiref==3.11.1
+certifi==2026.4.22
+cffi==2.0.0
+charset-normalizer==3.4.7
+click==8.3.3
+django==5.2.13
+django-crum==0.7.9
 django-model-utils==5.0.0
+django-waffle==5.0.0
+djangorestframework==3.17.1
+dnspython==2.8.0
 edx-django-utils==8.0.1
-edx-opaque-keys[django]==3.0.0
+edx-opaque-keys==4.0.0
+idna==3.13
 openedx-atlas==0.7.0
-openedx-filters==2.1.0
-packaging==24.2
+openedx-filters==3.4.1
+packaging==26.2
+psutil==7.2.2
+pycparser==3.0
+pymongo==4.4.0
+pynacl==1.6.2
+requests==2.33.1
+sqlparse==0.5.5
+stevedore==5.7.0
+typing-extensions==4.15.0
+urllib3==2.6.3

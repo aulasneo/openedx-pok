@@ -4,6 +4,21 @@ All enhancements and patches to `openedx_pok` are documented in this file.
 The project follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+
+- Target Open edX Verawood with Python 3.12 and Django 5.2; regenerate shared dependency pins from the platform release snapshot.
+- Declare runtime compatibility ranges separately from exact development/test constraints.
+- Keep the platform Django version pinned in tests and exercise real certificate filter pipelines and course-key relations.
+- Document the Ulmo-to-Verawood integration review and deployment checks in `docs/verawood.rst`.
+
+### Fixed
+
+- Preserve the existing `AutoField` primary keys and check migration drift in CI.
+- Read certificate grades from the platform grade object's `percent` attribute.
+- Use `COURSE_AUTHORING_MICROFRONTEND_URL` and `LMS_ROOT_URL` for certificate navigation and downloads.
+
 ## 21.0.1 - 2026-06-08
 - fix: Fix error when POK returns 202
 

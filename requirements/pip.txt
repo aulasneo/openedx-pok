@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/pip.txt requirements/pip.in
 #
-packaging==24.2
+packaging==26.2
     # via
     #   -c requirements/constraints.txt
     #   wheel

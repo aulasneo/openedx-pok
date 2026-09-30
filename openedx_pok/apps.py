@@ -9,7 +9,8 @@ class OpenedxPokConfig(AppConfig):
 
     name = 'openedx_pok'
     verbose_name = "POK"
-    default_auto_field = 'django.db.models.BigAutoField'
+    # Preserve the primary-key type in the existing migrations.
+    default_auto_field = 'django.db.models.AutoField'
 
     plugin_app = {
         PluginURLs.CONFIG: {

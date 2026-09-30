@@ -1,0 +1,18 @@
+.bumpversion.cfg
+  h_67430f944e00e2 2
+CHANGELOG.md
+  h_67430f944e00e2 7
+openedx_pok/__init__.py
+  h_67430f944e00e2 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb45eca231c0861ffbebcef5fc8ee1d2612ac7e2",
+  "prompts": {},
+  "humans": {
+    "h_67430f944e00e2": {
+      "author": "Andrés González <andres@aulasneo.com>"
+    }
+  }
+}

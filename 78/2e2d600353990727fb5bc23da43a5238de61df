@@ -1,0 +1,21 @@
+.github/workflows/pypi-publish.yml
+  s_fe4c2b41a5778e::t_8a01266cf7140c 10,17,20
+.github/workflows/ci.yml
+  s_fe4c2b41a5778e::t_8a01266cf7140c 16,20,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "782e2d600353990727fb5bc23da43a5238de61df",
+  "prompts": {},
+  "sessions": {
+    "s_fe4c2b41a5778e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08852-71c5-75f2-ac89-0e73b7f29569",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Andrés González <andres@aulasneo.com>"
+    }
+  }
+}

@@ -30,9 +30,15 @@ class OpenedxPokConfig(AppConfig):
                 'common': {
                     PluginSettings.RELATIVE_PATH: 'settings.common',
                 },
+                'production': {
+                    PluginSettings.RELATIVE_PATH: 'settings.common',
+                },
             },
             'lms.djangoapp': {
                 'common': {
+                    PluginSettings.RELATIVE_PATH: 'settings.common',
+                },
+                'production': {
                     PluginSettings.RELATIVE_PATH: 'settings.common',
                 },
             },

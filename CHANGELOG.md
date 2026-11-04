@@ -4,7 +4,7 @@ All enhancements and patches to `openedx_pok` are documented in this file.
 The project follows [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 22.0.1 - 2026-11-04
 
 - Fix module registration in production
 

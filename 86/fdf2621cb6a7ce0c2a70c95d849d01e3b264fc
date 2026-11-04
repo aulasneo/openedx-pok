@@ -1,0 +1,19 @@
+openedx_pok/apps.py
+  s_e13ce1b0eac68f::t_b83f3847e47069 33-35,41-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "86fdf2621cb6a7ce0c2a70c95d849d01e3b264fc",
+  "prompts": {},
+  "sessions": {
+    "s_e13ce1b0eac68f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a68c-1946-7023-99f0-3deccb87bca1",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Andrés González <andres@aulasneo.com>"
+    }
+  }
+}
